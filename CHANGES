@@ -2,14 +2,18 @@ Revision history for Perl module Tree::DAG_Node.
 
 1.07  Thu Nov  1 12:47:00 2012
 	- New maintainer: Ron Savage
+	- Pre-emptive apologies for any changes which are not back-compat. No such problems are expected, but the
+		introduction of some new methods may disconcert some viewers.
+	- Fix RT#78858, reported by Gene Boggs. Audit code for similar problems.
+	- Fix RT#79506. reported by Ron Savage.
 	- Rename ChangeLog to CHANGES, and add Changelog.ini.
-	- Replace mixture of cyclicity_fault() and Carp::croak with die.
+	- Replace all uses of cyclicity_fault() and Carp::croak with die.
 	- Remove unused methods: decommission_root(), cyclicity_allowed(), cyclicity_fault(), inaugurate_root(),
 		no_cyclicity() and _update_links(). OK - cyclicity_fault() was called once.
 	- Add methods: format_node(), hashref2string(), is_root(), node2string(), tree2string().
-		$tree -> tree2string returns an arrayref of lines which you can print in the usual way:
+		$tree -> tree2string($opts) returns an arrayref of lines which you can print in the usual way:
 		print map{"$_\n"} @{$tree -> tree2string};
-		Also, tree2string() - unlike draw_ascii_tree() - can optionally print the tree starting at any node.
+		Also, tree2string($opts) - unlike draw_ascii_tree() - can optionally print the tree starting at any node.
 		Override format_node(), hashref2string(), and node2string() if desired.
 	- Add t/demo.t.
 

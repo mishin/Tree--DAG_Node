@@ -7,7 +7,7 @@ use vars qw(@ISA $Debug $VERSION);
 $Debug = 0;
 $VERSION = '1.06';
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub format_node
 {
@@ -29,6 +29,16 @@ sub hashref2string
 	return '{' . join(', ', map{qq|$_ => "$$h{$_}"|} sort keys %$h) . '}';
 
 } # End of hashref2string.
+
+# -----------------------------------------------
+
+sub is_root
+{
+	my($self) = @_;
+
+	return defined $self -> mother ? 0 : 1;
+
+} # End of is_root.
 
 # -----------------------------------------------
 
@@ -96,7 +106,7 @@ sub new { # constructor
   return $it;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub _init { # method
   my $this = shift;
@@ -111,7 +121,7 @@ sub _init { # method
   return;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub _init_mother { # to be called by an _init
   my($this, $o) = @_[0,1];
@@ -126,7 +136,7 @@ sub _init_mother { # to be called by an _init
   # BAD THINGS MAY HAPPEN!!!
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub _init_daughters { # to be called by an _init
   my($this, $o) = @_[0,1];
@@ -141,7 +151,7 @@ sub _init_daughters { # to be called by an _init
   # BAD THINGS MAY HAPPEN!!!
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub _init_name { # to be called by an _init
   my($this, $o) = @_[0,1];
@@ -152,7 +162,7 @@ sub _init_name { # to be called by an _init
   $this->name( $o->{'name'} ) if exists $o->{'name'};
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub _init_attributes { # to be called by an _init
   my($this, $o) = @_[0,1];
@@ -163,7 +173,7 @@ sub _init_attributes { # to be called by an _init
   $this->attributes( $o->{'attributes'} ) if exists $o->{'attributes'};
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub daughters { # read-only attrib-method: returns a list.
   my $this = shift;
@@ -178,7 +188,7 @@ sub daughters { # read-only attrib-method: returns a list.
   return @{$this->{'daughters'} || []};
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub mother { # read-only attrib-method: returns an object (the mother node)
   my $this = shift;
@@ -186,7 +196,7 @@ sub mother { # read-only attrib-method: returns an object (the mother node)
   return $this->{'mother'};
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub add_daughters { # write-only method
   my($mother, @daughters) = @_;
@@ -198,13 +208,13 @@ sub add_daughters { # write-only method
     );
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub add_daughter { # alias
   my($it,@them) = @_;  $it->add_daughters(@them);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub add_daughters_left { # write-only method
   my($mother, @daughters) = @_;
@@ -216,13 +226,13 @@ sub add_daughters_left { # write-only method
     );
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub add_daughter_left { # alias
   my($it,@them) = @_;  $it->add_daughters_left(@them);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub _add_daughters_wrapper {
   my($mother, $callback, @daughters) = @_;
@@ -266,7 +276,7 @@ sub _add_daughters_wrapper {
   return;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub _update_daughter_links {
   # Eliminate any duplicates in my daughters list, and update
@@ -287,7 +297,7 @@ sub _update_daughter_links {
   return;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub new_daughter {
   my($mother, @options) = @_;
@@ -299,7 +309,7 @@ sub new_daughter {
   return $daughter;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub new_daughter_left {
   my($mother, @options) = @_;
@@ -311,7 +321,7 @@ sub new_daughter_left {
   return $daughter;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub remove_daughters { # write-only method
   my($mother, @daughters) = @_;
@@ -337,13 +347,13 @@ sub remove_daughters { # write-only method
   return;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub remove_daughter { # alias
   my($it,@them) = @_;  $it->remove_daughters(@them);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub unlink_from_mother {
   my $node = $_[0];
@@ -352,7 +362,7 @@ sub unlink_from_mother {
   return $mother;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub clear_daughters { # write-only method
   my($mother) = $_[0];
@@ -369,7 +379,7 @@ sub clear_daughters { # write-only method
   return @daughters; # NEW
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub set_daughters { # write-only method
   my($mother, @them) = @_;
@@ -378,7 +388,7 @@ sub set_daughters { # write-only method
   # yup, it's that simple
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub replace_with { # write-only method
   my($this, @replacements) = @_;
@@ -415,7 +425,7 @@ sub replace_with { # write-only method
   return($this, @replacements);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub replace_with_daughters { # write-only method
   my($this) = $_[0]; # takes no params other than the self
@@ -434,7 +444,7 @@ sub replace_with_daughters { # write-only method
   return($this, @daughters);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub add_left_sisters { # write-only method
   my($this, @new) = @_;
@@ -445,13 +455,13 @@ sub add_left_sisters { # write-only method
   return @new;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub add_left_sister { # alias
   my($it,@them) = @_;  $it->add_left_sisters(@them);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub add_right_sisters { # write-only method
   my($this, @new) = @_;
@@ -461,13 +471,13 @@ sub add_right_sisters { # write-only method
   return @new;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub add_right_sister { # alias
   my($it,@them) = @_;  $it->add_right_sisters(@them);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub name { # read/write attribute-method.  returns/expects a scalar
   my $this = shift;
@@ -476,7 +486,7 @@ sub name { # read/write attribute-method.  returns/expects a scalar
 }
 
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub attributes { # read/write attribute-method
   # expects a ref, presumably a hashref
@@ -488,20 +498,20 @@ sub attributes { # read/write attribute-method
   return $this->{'attributes'};
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub attribute { # alias
   my($it,@them) = @_;  $it->attributes(@them);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub is_node { return 1; } # always true.
 # NEVER override this with anything that returns false in the belief
 #  that this'd signal "not a node class".  The existence of this method
 #  is what I test for, with the various "can()" uses in this class.
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub ancestors {
   my $this = shift;
@@ -527,7 +537,7 @@ sub ancestors {
   return @ancestors;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub root {
   my $it = $_[0];
@@ -535,14 +545,14 @@ sub root {
   return $ancestors[-1];
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub is_daughter_of {
   my($it,$mama) = @_[0,1];
   return $it->{'mother'} eq $mama;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub self_and_descendants {
   # read-only method:  return a list of myself and any/all descendants
@@ -554,7 +564,7 @@ sub self_and_descendants {
   return @List;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub descendants {
   # read-only method:  return a list of my descendants
@@ -564,7 +574,7 @@ sub descendants {
   return @list;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub leaves_under {
   # read-only method:  return a list of all leaves under myself.
@@ -584,7 +594,7 @@ sub leaves_under {
   return @List;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub depth_under {
   my $node = shift;
@@ -600,7 +610,7 @@ sub depth_under {
   return $max_depth;
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub generation {
   my($node, $limit) = @_[0,1];
@@ -615,14 +625,14 @@ sub generation {
     # Yup, my generation is just all the daughters of my mom's generation.
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub generation_under {
   my($node, @rest) = @_;
   return $node->generation(@rest);
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub self_and_sisters {
   my $node = $_[0];
@@ -631,7 +641,7 @@ sub self_and_sisters {
   return @{$node->{'mother'}->{'daughters'}};
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub sisters {
   my $node = $_[0];
@@ -642,7 +652,7 @@ sub sisters {
              );
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub left_sister {
   my $it = $_[0];
@@ -660,7 +670,7 @@ sub left_sister {
   die "SPORK ERROR 9757: I'm not in my mother's daughter list!?!?";
 }
 
-# ------------------------------------------------
+# -----------------------------------------------
 
 sub left_sisters {
   my $it = $_[0];
@@ -899,7 +909,7 @@ sub dump_names {
         join('',
              $o->{'indent'} x $o->{'_depth'},
              $o->{'tick'},
-             &Tree::DAG_Node::_dump_quote($this->name || $this),
+             &Tree::DAG_Node::_dump_quote(defined $this->name ? $this->name : $this),
              "\n"
         )
       );
@@ -1023,12 +1033,7 @@ sub tree_to_lol_notation {
   ;
   $o->{'callbackback'} = sub {
       my($this, $o) = @_[0,1];
-      my $name = $this->name;
-      if(!defined($name)) {
-        $name = 'undef';
-      } else {
-        $name = &Tree::DAG_Node::_dump_quote($name);
-      }
+      my $name = defined $this->name ? &Tree::DAG_Node::_dump_quote($this->name) : 'undef';
       push(@out,
              $o->{'indent'} x ($o->{'_depth'} + 1),
              "$name$line_end",
@@ -1190,7 +1195,7 @@ sub draw_ascii_tree {
   if($o->{'no_name'}) {
     $printable_name = '*';
   } else {
-    $printable_name = $it->name || $it;
+    $printable_name = defined $it->name ? $it->name : $it;
     $printable_name =~ tr<\cm\cj\t >< >s;
     $printable_name = "<$printable_name>";
   }

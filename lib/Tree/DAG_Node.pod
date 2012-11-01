@@ -1453,6 +1453,12 @@ its address), you can to override the C<name> method, without causing
 problems.  (Be sure to consider the case of $obj->name as a write
 method, as it's used in C<lol_to_tree> and C<random_network>.)
 
+=head1 FAQ
+
+=head2 Why did you move the POD to the end?
+
+Because the apostrophes in the text confused the syntax hightlighter in my editor UltraEdit.
+
 =head1 SEE ALSO
 
 =over 4
@@ -1461,15 +1467,29 @@ method, as it's used in C<lol_to_tree> and C<random_network>.)
 
 =item o L<Tree>
 
+Lightweight.
+
 =item o L<Tree::Binary>
+
+Lightweight.
 
 =item o L<Tree::DAG_Node::Persist>
 
+Lightweight.
+
 =item o L<Tree::Persist>
+
+Lightweight.
 
 =item o L<Forest>
 
+Uses L<Moose>.
+
 =back
+
+Tree::DAG_Node itself is also lightweight.
+
+=head1 REFERENCES
 
 Wirth, Niklaus.  1976.  I<Algorithms + Data Structures = Programs>
 Prentice-Hall, Englewood Cliffs, NJ.
@@ -1495,6 +1515,12 @@ Programs>.)
 =head1 MACHINE-READABLE CHANGE LOG
 
 The file CHANGES was converted into Changelog.ini by L<Module::Metadata::Changes>.
+
+=head1 SUPPORT
+
+Email the author, or log a bug on RT:
+
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=Tree::DAG_Node>.
 
 =head1 ACKNOWLEDGEMENTS
 
