@@ -16,6 +16,7 @@ Revision history for Perl module Tree::DAG_Node.
 		Also, tree2string($opts) - unlike draw_ascii_tree() - can optionally print the tree starting at any node.
 		Override format_node(), hashref2string(), and node2string() if desired.
 	- Add t/demo.t.
+	- Reformat POD big-time.
 
 1.06  Sun Dec  2 12:00:00 1998
 	- New maintainer: David Hand.

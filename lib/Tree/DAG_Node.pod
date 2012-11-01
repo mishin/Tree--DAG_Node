@@ -1,3 +1,5 @@
+=pod
+
 =head1 NAME
 
 Tree::DAG_Node - An N-ary tree
@@ -142,7 +144,7 @@ are never written to directly, but are changed as appropriate by the
 The other two (and whatever others you may add in derived classes) are
 simply accessed thru the same-named methods, discussed further below.
 
-=head2 ABOUT THE DOCUMENTED INTERFACE
+=head2 About The Documented Interface
 
 Stick to the documented interface (and comments in the source --
 especially ones saying "undocumented!" and/or "disfavored!" -- do not
@@ -270,8 +272,6 @@ Just another way to get at the C<new> method. This B<does not copy>
 $obj, but merely constructs a new object of the same class as it.
 Saves you the bother of going $class = ref $obj; $obj2 = $class->new;
 
-=cut
-
 =item the method $node->_init({...options...})
 
 Initialize the object's attribute values.  See the discussion above.
@@ -289,31 +289,13 @@ Please see the source for more information.
 
 =back
 
-=cut
+=head1 Methods
 
+=head2 add_daughter(LIST)
 
-=head1 LINKAGE-RELATED METHODS
+An exact synonym for L</add_daughters(LIST)>.
 
-=over
-
-=item $node->daughters
-
-This returns the (possibly empty) list of daughters for $node.
-
-=cut
-###########################################################################
-
-=item $node->mother
-
-This returns what node is $node's mother.  This is undef if $node has
-no mother -- i.e., if it is a root.
-
-=cut
-
-###########################################################################
-###########################################################################
-
-=item $mother->add_daughters( LIST )
+=head2 add_daughters(LIST)
 
 This method adds the node objects in LIST to the (right) end of
 $mother's C<daughter> list.  Making a node N1 the daughter of another
@@ -330,216 +312,21 @@ If you try to make N1 a daughter of N2, but it's B<already> a daughter
 of N2, then this is a no-operation -- it won't move such nodes to the
 end of the list or anything; it just skips doing anything with them.
 
-=item $node->add_daughter( LIST )
+=head2 add_daughter_left(LIST)
 
-An exact synonym for $node->add_daughters(LIST)
+An exact synonym for L</add_daughters_left(LIST)>.
 
-=cut
-
-=item $mother->add_daughters_left( LIST )
+=head2 add_daughters_left(LIST)
 
 This method is just like C<add_daughters>, except that it adds the
 node objects in LIST to the (left) beginning of $mother's daughter
 list, instead of the (right) end of it.
 
-=item $node->add_daughter_left( LIST )
+=head2 add_left_sister(LIST)
 
-An exact synonym for $node->add_daughters_left( LIST )
+An exact synonym for L</add_left_sisters(LIST)>.
 
-=cut
-
-=item Note:
-
-The above link-making methods perform basically an C<unshift> or
-C<push> on the mother node's daughter list.  To get the full range of
-list-handling functionality, copy the daughter list, and change it,
-and then call C<set_daughters> on the result:
-
-          @them = $mother->daughters;
-          @removed = splice(@them, 0,2, @new_nodes);
-          $mother->set_daughters(@them);
-
-Or consider a structure like:
-
-          $mother->set_daughters(
-                                 grep($_->name =~ /NP/ ,
-                                      $mother->daughters
-                                     )
-                                );
-
-=cut
-
-
-###
-##  Used by the adding methods
-#    (except maybe new_daughter, and new_daughter_left)
-
-###########################################################################
-###########################################################################
-
-=item the constructor $daughter = $mother->new_daughter, or
-
-=item the constructor $daughter = $mother->new_daughter({...options...})
-
-This B<constructs> a B<new> node (of the same class as $mother), and
-adds it to the (right) end of the daughter list of $mother. This is
-essentially the same as going
-
-      $daughter = $mother->new;
-      $mother->add_daughter($daughter);
-
-but is rather more efficient because (since $daughter is guaranteed new
-and isn't linked to/from anything), it doesn't have to check that
-$daughter isn't an ancestor of $mother, isn't already daughter to a
-mother it needs to be unlinked from, isn't already in $mother's
-daughter list, etc.
-
-As you'd expect for a constructor, it returns the node-object created.
-
-=cut
-
-# Note that if you radically change 'mother'/'daughters' bookkeeping,
-# you may have to change this routine, since it's one of the places
-# that directly writes to 'daughters' and 'mother'.
-
-=item the constructor $mother->new_daughter_left, or
-
-=item $mother->new_daughter_left({...options...})
-
-This is just like $mother->new_daughter, but adds the new daughter
-to the left (start) of $mother's daughter list.
-
-=cut
-
-# Note that if you radically change 'mother'/'daughters' bookkeeping,
-# you may have to change this routine, since it's one of the places
-# that directly writes to 'daughters' and 'mother'.
-
-###########################################################################
-
-=item $mother->remove_daughters( LIST )
-
-This removes the nodes listed in LIST from $mother's daughter list.
-This is a no-operation if LIST is empty.  If there are things in LIST
-that aren't a current daughter of $mother, they are ignored.
-
-Not to be confused with $mother->clear_daughters.
-
-=cut
-
-=item $node->remove_daughter( LIST )
-
-An exact synonym for $node->remove_daughters( LIST )
-
-=cut
-
-=item $node->unlink_from_mother
-
-This removes node from the daughter list of its mother.  If it has no
-mother, this is a no-operation.
-
-Returns the mother unlinked from (if any).
-
-=cut
-
-###########################################################################
-
-=item $mother->clear_daughters
-
-This unlinks all $mother's daughters.
-Returns the the list of what used to be $mother's daughters.
-
-Not to be confused with $mother->remove_daughters( LIST ).
-
-=cut
-
-#--------------------------------------------------------------------------
-
-=item $mother->set_daughters( LIST )
-
-This unlinks all $mother's daughters, and replaces them with the
-daughters in LIST.
-
-Currently implemented as just $mother->clear_daughters followed by
-$mother->add_daughters( LIST ).
-
-=cut
-
-#--------------------------------------------------------------------------
-
-=item $node->replace_with( LIST )
-
-This replaces $node in its mother's daughter list, by unlinking $node
-and replacing it with the items in LIST.  This returns a list consisting
-of $node followed by LIST, i.e., the nodes that replaced it.
-
-LIST can include $node itself (presumably at most once).  LIST can
-also be empty-list.  However, if any items in LIST are sisters to
-$node, they are ignored, and are not in the copy of LIST passed as the
-return value.
-
-As you might expect for any linking operation, the items in LIST
-cannot be $node's mother, or any ancestor to it; and items in LIST are,
-of course, unlinked from their mothers (if they have any) as they're
-linked to $node's mother.
-
-(In the special (and bizarre) case where $node is root, this simply calls
-$this->unlink_from_mother on all the items in LIST, making them roots of
-their own trees.)
-
-Note that the daughter-list of $node is not necessarily affected; nor
-are the daughter-lists of the items in LIST.  I mention this in case you
-think replace_with switches one node for another, with respect to its
-mother list B<and> its daughter list, leaving the rest of the tree
-unchanged. If that's what you want, replacing $Old with $New, then you
-want:
-
-  $New->set_daughters($Old->clear_daughters);
-  $Old->replace_with($New);
-
-(I can't say $node's and LIST-items' daughter lists are B<never>
-affected my replace_with -- they can be affected in this case:
-
-  $N1 = ($node->daughters)[0]; # first daughter of $node
-  $N2 = ($N1->daughters)[0];   # first daughter of $N1;
-  $N3 = Tree::DAG_Node->random_network; # or whatever
-  $node->replace_with($N1, $N2, $N3);
-
-As a side affect of attaching $N1 and $N2 to $node's mother, they're
-unlinked from their parents ($node, and $N1, replectively).
-But N3's daughter list is unaffected.
-
-In other words, this method does what it has to, as you'd expect it
-to.
-
-=cut
-
-=item $node->replace_with_daughters
-
-This replaces $node in its mother's daughter list, by unlinking $node
-and replacing it with its daughters.  In other words, $node becomes
-motherless and daughterless as its daughters move up and take its place.
-This returns a list consisting of $node followed by the nodes that were
-its daughters.
-
-In the special (and bizarre) case where $node is root, this simply
-unlinks its daughters from it, making them roots of their own trees.
-
-Effectively the same as $node->replace_with($node->daughters), but more
-efficient, since less checking has to be done.  (And I also think
-$node->replace_with_daughters is a more common operation in
-tree-wrangling than $node->replace_with(LIST), so deserves a named
-method of its own, but that's just me.)
-
-=cut
-
-# Note that if you radically change 'mother'/'daughters' bookkeeping,
-# you may have to change this routine, since it's one of the places
-# that directly writes to 'daughters' and 'mother'.
-
-#--------------------------------------------------------------------------
-
-=item $node->add_left_sisters( LIST )
+=head2 add_left_sisters(LIST)
 
 This adds the elements in LIST (in that order) as immediate left sisters of
 $node.  In other words, given that B's mother's daughter-list is (A,B,C,D),
@@ -551,20 +338,16 @@ If LIST is empty, this is a no-op, and returns empty-list.
 This is basically implemented as a call to $node->replace_with(LIST,
 $node), and so all replace_with's limitations and caveats apply.
 
-The return value of $node->add_left_sisters( LIST ) is the elements of
+The return value of $node->add_left_sisters(LIST) is the elements of
 LIST that got added, as returned by replace_with -- minus the copies
 of $node you'd get from a straight call to $node->replace_with(LIST,
 $node).
 
-=cut
+=head2 add_right_sister(LIST)
 
-=item $node->add_left_sister( LIST )
+An exact synonym for L</add_right_sisters(LIST)>.
 
-An exact synonym for $node->add_left_sisters(LIST)
-
-=cut
-
-=item $node->add_right_sisters( LIST )
+=head2 add_right_sisters(LIST)
 
 Just like add_left_sisters (which see), except that the the elements
 in LIST (in that order) as immediate B<right> sisters of $node;
@@ -573,274 +356,9 @@ In other words, given that B's mother's daughter-list is (A,B,C,D),
 calling B->add_right_sisters(X,Y) makes B's mother's daughter-list
 (A,B,X,Y,C,D).
 
-=cut
+=head2 address()
 
-=item $node->add_right_sister( LIST )
-
-An exact synonym for $node->add_right_sisters(LIST)
-
-=cut
-
-###########################################################################
-
-=back
-
-=cut
-
-###########################################################################
-###########################################################################
-
-=head1 OTHER ATTRIBUTE METHODS
-
-=over
-
-=item $node->name or $node->name(SCALAR)
-
-In the first form, returns the value of the node object's "name"
-attribute.  In the second form, sets it to the value of SCALAR.
-
-=cut
-
-###########################################################################
-
-=item $node->attributes or $node->attributes(SCALAR)
-
-In the first form, returns the value of the node object's "attributes"
-attribute.  In the second form, sets it to the value of SCALAR.  I
-intend this to be used to store a reference to a (presumably
-anonymous) hash the user can use to store whatever attributes he
-doesn't want to have to store as object attributes.  In this case, you
-needn't ever set the value of this.  (_init has already initialized it
-to {}.)  Instead you can just do...
-
-  $node->attributes->{'foo'} = 'bar';
-
-...to write foo => bar.
-
-=cut
-
-=item $node->attribute or $node->attribute(SCALAR)
-
-An exact synonym for $node->attributes or $node->attributes(SCALAR)
-
-=cut
-
-
-=back
-
-=head1 OTHER METHODS TO DO WITH RELATIONSHIPS
-
-=over
-
-=item $node->is_node
-
-This always returns true.  More pertinently, $object->can('is_node')
-is true (regardless of what C<is_node> would do if called) for objects
-belonging to this class or for any class derived from it.
-
-=cut
-
-###########################################################################
-
-=item $node->ancestors
-
-Returns the list of this node's ancestors, starting with its mother,
-then grandmother, and ending at the root.  It does this by simply
-following the 'mother' attributes up as far as it can.  So if $item IS
-the root, this returns an empty list.
-
-Consider that scalar($node->ancestors) returns the ply of this node
-within the tree -- 2 for a granddaughter of the root, etc., and 0 for
-root itself.
-
-=cut
-
-###########################################################################
-
-=item $node->root
-
-Returns the root of whatever tree $node is a member of.  If $node is
-the root, then the result is $node itself.
-
-=cut
-
-###########################################################################
-
-=item $node->is_daughter_of($node2)
-
-Returns true iff $node is a daughter of $node2.
-Currently implemented as just a test of ($it->mother eq $node2).
-
-=cut
-
-###########################################################################
-
-=item $node->self_and_descendants
-
-Returns a list consisting of itself (as element 0) and all the
-descendants of $node.  Returns just itself if $node is a
-terminal_node.
-
-(Note that it's spelled "descendants", not "descendents".)
-
-=cut
-
-###########################################################################
-
-=item $node->descendants
-
-Returns a list consisting of all the descendants of $node.  Returns
-empty-list if $node is a terminal_node.
-
-(Note that it's spelled "descendants", not "descendents".)
-
-=cut
-
-###########################################################################
-
-=item $node->leaves_under
-
-Returns a list (going left-to-right) of all the leaf nodes under
-$node.  ("Leaf nodes" are also called "terminal nodes" -- i.e., nodes
-that have no daughters.)  Returns $node in the degenerate case of
-$node being a leaf itself.
-
-=cut
-
-###########################################################################
-
-=item $node->depth_under
-
-Returns an integer representing the number of branches between this
-$node and the most distant leaf under it.  (In other words, this
-returns the ply of subtree starting of $node.  Consider
-scalar($it->ancestors) if you want the ply of a node within the whole
-tree.)
-
-=cut
-
-###########################################################################
-
-=item $node->generation
-
-Returns a list of all nodes (going left-to-right) that are in $node's
-generation -- i.e., that are the some number of nodes down from
-the root.  $root->generation is just $root.
-
-Of course, $node is always in its own generation.
-
-=item $node->generation_under(NODE2)
-
-Like $node->generation, but returns only the nodes in $node's generation
-that are also descendants of NODE2 -- in other words,
-
-    @us = $node->generation_under( $node->mother->mother );
-
-is all $node's first cousins (to borrow yet more kinship terminology) --
-assuming $node does indeed have a grandmother.  Actually "cousins" isn't
-quite an apt word, because C<@us> ends up including $node's siblings and
-$node.
-
-Actually, C<generation_under> is just an alias to C<generation>, but I
-figure that this:
-
-   @us = $node->generation_under($way_upline);
-
-is a bit more readable than this:
-
-   @us = $node->generation($way_upline);
-
-But it's up to you.
-
-$node->generation_under($node) returns just $node.
-
-If you call $node->generation_under($node) but NODE2 is not $node or an
-ancestor of $node, it behaves as if you called just $node->generation().
-
-=cut
-
-###########################################################################
-
-=item $node->self_and_sisters
-
-Returns a list of all nodes (going left-to-right) that have the same
-mother as $node -- including $node itself. This is just like
-$node->mother->daughters, except that that fails where $node is root,
-whereas $root->self_and_siblings, as a special case, returns $root.
-
-(Contrary to how you may interpret how this method is named, "self" is
-not (necessarily) the first element of what's returned.)
-
-=cut
-
-###########################################################################
-
-=item $node->sisters
-
-Returns a list of all nodes (going left-to-right) that have the same
-mother as $node -- B<not including> $node itself.  If $node is root,
-this returns empty-list.
-
-=cut
-
-###########################################################################
-
-=item $node->left_sister
-
-Returns the node that's the immediate left sister of $node.  If $node
-is the leftmost (or only) daughter of its mother (or has no mother),
-then this returns undef.
-
-(See also $node->add_left_sisters(LIST).)
-
-=cut
-
-
-=item $node->left_sisters
-
-Returns a list of nodes that're sisters to the left of $node.  If
-$node is the leftmost (or only) daughter of its mother (or has no
-mother), then this returns an empty list.
-
-(See also $node->add_left_sisters(LIST).)
-
-=cut
-
-=item $node->right_sister
-
-Returns the node that's the immediate right sister of $node.  If $node
-is the rightmost (or only) daughter of its mother (or has no mother),
-then this returns undef.
-
-(See also $node->add_right_sisters(LIST).)
-
-=cut
-
-=item $node->right_sisters
-
-Returns a list of nodes that're sisters to the right of $node. If
-$node is the rightmost (or only) daughter of its mother (or has no
-mother), then this returns an empty list.
-
-(See also $node->add_right_sisters(LIST).)
-
-=cut
-
-###########################################################################
-
-=item $node->my_daughter_index
-
-Returns what index this daughter is, in its mother's C<daughter> list.
-In other words, if $node is ($node->mother->daughters)[3], then
-$node->my_daughter_index returns 3.
-
-As a special case, returns 0 if $node has no mother.
-
-=cut
-
-###########################################################################
-
-=item $node->address or $anynode->address(ADDRESS)
+=head2 address(ADDRESS)
 
 With the first syntax, returns the address of $node within its tree,
 based on its position within the tree.  An address is formed by noting
@@ -882,11 +400,47 @@ that tree as currently structured.
 to you, if you mant to figure out what nodes are to the right of what
 other nodes.)
 
-=cut
+=head2 ancestors()
 
-###########################################################################
+Returns the list of this node's ancestors, starting with its mother,
+then grandmother, and ending at the root.  It does this by simply
+following the 'mother' attributes up as far as it can.  So if $item IS
+the root, this returns an empty list.
 
-=item $node->common(LIST)
+Consider that scalar($node->ancestors) returns the ply of this node
+within the tree -- 2 for a granddaughter of the root, etc., and 0 for
+root itself.
+
+=head2 attribute()
+
+=head2 attribute(SCALAR)
+
+Exact synonyms for L</attributes() and L</attributes(SCALAR)>.
+
+=head2 attributes()
+
+=head2 attributes(SCALAR)
+
+In the first form, returns the value of the node object's "attributes"
+attribute.  In the second form, sets it to the value of SCALAR.  I
+intend this to be used to store a reference to a (presumably
+anonymous) hash the user can use to store whatever attributes he
+doesn't want to have to store as object attributes.  In this case, you
+needn't ever set the value of this.  (_init has already initialized it
+to {}.)  Instead you can just do...
+
+  $node->attributes->{'foo'} = 'bar';
+
+...to write foo => bar.
+
+=head2 clear_daughters()
+
+This unlinks all $mother's daughters.
+Returns the the list of what used to be $mother's daughters.
+
+Not to be confused with L</remove_daughters(LIST)>.
+
+=head2 common(LIST)
 
 Returns the lowest node in the tree that is ancestor-or-self to the
 nodes $node and LIST.
@@ -898,11 +452,7 @@ If the nodes aren't all in the same tree, the answer is undef.
 
 As a degenerate case, if LIST is empty, returns $node.
 
-=cut
-
-###########################################################################
-
-=item $node->common_ancestor(LIST)
+=head2 common_ancestor(LIST)
 
 Returns the lowest node that is ancestor to all the nodes given (in
 nodes $node and LIST).  In other words, it answers the question: "What
@@ -918,72 +468,150 @@ If the nodes aren't all in the same tree, the answer is undef.
 As a degenerate case, if LIST is empty, returns $node's mother;
 that'll be undef if $node is root.
 
-=cut
+=head2 copy_at_and_under()
 
-###########################################################################
-###########################################################################
+=head2 copy_at_and_under({...options...})
 
-=back
+This returns a copy of the subtree consisting of $node and everything
+under it.
 
-=head1 YET MORE METHODS
+If you pass no options, copy_at_and_under pretends you've passed {}.
 
-=over
+This works by recursively building up the new tree from the leaves,
+duplicating nodes using $orig_node->copy($options_ref) and then
+linking them up into a new tree of the same shape.
 
-=item $node->walk_down({ callback => \&foo, callbackback => \&foo, ... })
+Options you specify are passed down to calls to $node->copy.
 
-Performs a depth-first traversal of the structure at and under $node.
-What it does at each node depends on the value of the options hashref,
-which you must provide.  There are three options, "callback" and
-"callbackback" (at least one of which must be defined, as a sub
-reference), and "_depth".  This is what C<walk_down> does, in
-pseudocode form:
+=head2 copy_tree()
 
-* Start at the $node given.
+=head2 copy_tree({...options...})
 
-* If there's a C<callback>, call it with $node as the first argument,
-and the options hashref as the second argument (which contains the
-potentially useful C<_depth>, remember).  This function must return
-true or false -- if false, it will block the next step:
+This returns the root of a copy of the tree that $node is a member of.
+If you pass no options, copy_tree pretends you've passed {}.
 
-* If $node has any daughter nodes, increment C<_depth>, and call
-$daughter->walk_down(options_hashref) for each daughter (in order, of
-course), where options_hashref is the same hashref it was called with.
-When this returns, decrements C<_depth>.
+This method is currently implemented as just a call to
+$this->root->copy_at_and_under({...options...}), but magic may be
+added in the future.
 
-* If there's a C<callbackback>, call just it as with C<callback> (but
-tossing out the return value).  Note that C<callback> returning false
-blocks traversal below $node, but doesn't block calling callbackback
-for $node.  (Incidentally, in the unlikely case that $node has stopped
-being a node object, C<callbackback> won't get called.)
+Options you specify are passed down to calls to $node->copy.
 
-* Return.
+=head2 daughters()
 
-$node->walk_down is the way to recursively do things to a tree (if you
-start at the root) or part of a tree; if what you're doing is best done
-via pre-pre order traversal, use C<callback>; if what you're doing is
-best done with post-order traversal, use C<callbackback>.
-C<walk_down> is even the basis for plenty of the methods in this
-class.  See the source code for examples both simple and horrific.
+This returns the (possibly empty) list of daughters for $node.
 
-Note that if you don't specify C<_depth>, it effectively defaults to
-0.  You should set it to scalar($node->ancestors) if you want
-C<_depth> to reflect the true depth-in-the-tree for the nodes called,
-instead of just the depth below $node.  (If $node is the root, there's
-difference, of course.)
+=head2 delete_tree()
 
-And B<by the way>, it's a bad idea to modify the tree from the callback.
-Unpredictable things may happen.  I instead suggest having your callback
-add to a stack of things that need changing, and then, once C<walk_down>
-is all finished, changing those nodes from that stack.
+Destroys the entire tree that $node is a member of (starting at the
+root), by nulling out each node-object's attributes (including, most
+importantly, its linkage attributes -- hopefully this is more than
+sufficient to eliminate all circularity in the data structure), and
+then moving it into the class DEADNODE.
 
-Note that the existence of C<walk_down> doesn't mean you can't write
-you own special-use traversers.
+Use this when you're finished with the tree in question, and want to
+free up its memory.  (If you don't do this, it'll get freed up anyway
+when your program ends.)
 
-=cut
+If you try calling any methods on any of the node objects in the tree
+you've destroyed, you'll get an error like:
 
-###########################################################################
+  Can't locate object method "leaves_under"
+    via package "DEADNODE".
 
-=item @lines = $node->dump_names({ ...options... });
+So if you see that, that's what you've done wrong.  (Actually, the
+class DEADNODE does provide one method: a no-op method "delete_tree".
+So if you want to delete a tree, but think you may have deleted it
+already, it's safe to call $node->delete_tree on it (again).)
+
+The C<delete_tree> method is needed because Perl's garbage collector
+would never (as currently implemented) see that it was time to
+de-allocate the memory the tree uses -- until either you call
+$node->delete_tree, or until the program stops (at "global
+destruction" time, when B<everything> is unallocated).
+
+Incidentally, there are better ways to do garbage-collecting on a
+tree, ways which don't require the user to explicitly call a method
+like C<delete_tree> -- they involve dummy classes, as explained at
+C<http://mox.perl.com/misc/circle-destroy.pod>
+
+However, introducing a dummy class concept into Tree::DAG_Node would
+be rather a distraction.  If you want to do this with your derived
+classes, via a DESTROY in a dummy class (or in a tree-metainformation
+class, maybe), then feel free to.
+
+The only case where I can imagine C<delete_tree> failing to totally
+void the tree, is if you use the hashref in the "attributes" attribute
+to store (presumably among other things) references to other nodes'
+"attributes" hashrefs -- which 1) is maybe a bit odd, and 2) is your
+problem, because it's your hash structure that's circular, not the
+tree's.  Anyway, consider:
+
+      # null out all my "attributes" hashes
+      $anywhere->root->walk_down({
+        'callback' => sub {
+          $hr = $_[0]->attributes; %$hr = (); return 1;
+        }
+      });
+      # And then:
+      $anywhere->delete_tree;
+
+(I suppose C<delete_tree> is a "destructor", or as close as you can
+meaningfully come for a circularity-rich data structure in Perl.)
+
+See also L</WHEN AND HOW TO DESTROY THE TREE>.
+
+=head2 depth_under()
+
+Returns an integer representing the number of branches between this
+$node and the most distant leaf under it.  (In other words, this
+returns the ply of subtree starting of $node.  Consider
+scalar($it->ancestors) if you want the ply of a node within the whole
+tree.)
+
+=head2 descendants()
+
+Returns a list consisting of all the descendants of $node.  Returns
+empty-list if $node is a terminal_node.
+
+(Note that it's spelled "descendants", not "descendents".)
+
+=head2 draw_ascii_tree({ ... options ... })
+
+Returns an arrayref of lines.
+
+Draws a nice ASCII-art representation of the tree structure
+at-and-under $node, with $node at the top.  Returns a reference to the
+list of lines (with no "\n"s or anything at the end of them) that make
+up the picture.
+
+Example usage:
+
+  print map("$_\n", @{$tree->draw_ascii_tree});
+
+draw_ascii_tree takes parameters you set in the options hashref:
+
+* "no_name" -- if true, C<draw_ascii_tree> doesn't print the name of
+the node; simply prints a "*".  Defaults to 0 (i.e., print the node
+name.)
+
+* "h_spacing" -- number 0 or greater.  Sets the number of spaces
+inserted horizontally between nodes (and groups of nodes) in a tree.
+Defaults to 1.
+
+* "h_compact" -- number 0 or 1.  Sets the extent to which
+C<draw_ascii_tree> tries to save horizontal space.  Defaults to 1.  If
+I think of a better scrunching algorithm, there'll be a "2" setting
+for this.
+
+* "v_compact" -- number 0, 1, or 2.  Sets the degree to which
+C<draw_ascii_tree> tries to save vertical space.  Defaults to 1.
+
+This occasionally returns trees that are a bit cock-eyed in parts; if
+anyone can suggest a better drawing algorithm, I'd be appreciative.
+
+=head2 dump_names({ ...options... })
+
+Returns an array.
 
 Dumps, as an indented list, the names of the nodes starting at $node,
 and continuing under it.  Options are:
@@ -1004,46 +632,83 @@ to empty-string suppresses indenting.
 The dump is not printed, but is returned as a list, where each
 item is a line, with a "\n" at the end.
 
-=cut
+=head2 generation()
 
-###########################################################################
-###########################################################################
+Returns a list of all nodes (going left-to-right) that are in $node's
+generation -- i.e., that are the some number of nodes down from
+the root.  $root->generation is just $root.
 
-=item the constructor CLASS->random_network({...options...})
+Of course, $node is always in its own generation.
 
-=item the method $node->random_network({...options...})
+=head2 generation_under(NODE2)
 
-In the first case, constructs a randomly arranged network under a new
-node, and returns the root node of that tree.  In the latter case,
-constructs the network under $node.
+Like $node->generation, but returns only the nodes in $node's generation
+that are also descendants of NODE2 -- in other words,
 
-Currently, this is implemented a bit half-heartedly, and
-half-wittedly.  I basically needed to make up random-looking networks
-to stress-test the various tree-dumper methods, and so wrote this.  If
-you actually want to rely on this for any application more
-serious than that, I suggest examining the source code and seeing if
-this does really what you need (say, in reliability of randomness);
-and feel totally free to suggest changes to me (especially in the form
-of "I rewrote C<random_network>, here's the code...")
+    @us = $node->generation_under( $node->mother->mother );
 
-It takes four options:
+is all $node's first cousins (to borrow yet more kinship terminology) --
+assuming $node does indeed have a grandmother.  Actually "cousins" isn't
+quite an apt word, because C<@us> ends up including $node's siblings and
+$node.
 
-* max_node_count -- maximum number of nodes this tree will be allowed
-to have (counting the root).  Defaults to 25.
+Actually, C<generation_under> is just an alias to C<generation>, but I
+figure that this:
 
-* min_depth -- minimum depth for the tree.  Defaults to 2.  Leaves can
-be generated only after this depth is reached, so the tree will be at
-least this deep -- unless max_node_count is hit first.
+   @us = $node->generation_under($way_upline);
 
-* max_depth -- maximum depth for the tree.  Defaults to 3 plus
-min_depth.  The tree will not be deeper than this.
+is a bit more readable than this:
 
-* max_children -- maximum number of children any mother in the tree
-can have.  Defaults to 4.
+   @us = $node->generation($way_upline);
 
-=cut
+But it's up to you.
 
-=item the constructor CLASS->lol_to_tree($lol);
+$node->generation_under($node) returns just $node.
+
+If you call $node->generation_under($node) but NODE2 is not $node or an
+ancestor of $node, it behaves as if you called just $node->generation().
+
+=head2 is_daughter_of($node2)
+
+Returns true iff $node is a daughter of $node2.
+Currently implemented as just a test of ($it->mother eq $node2).
+
+=head2 is_node()
+
+This always returns true.  More pertinently, $object->can('is_node')
+is true (regardless of what C<is_node> would do if called) for objects
+belonging to this class or for any class derived from it.
+
+=head2 is_root()
+
+Returns 1 if the caller is the root, and 0 if it is not.
+
+=head2 leaves_under()
+
+Returns a list (going left-to-right) of all the leaf nodes under
+$node.  ("Leaf nodes" are also called "terminal nodes" -- i.e., nodes
+that have no daughters.)  Returns $node in the degenerate case of
+$node being a leaf itself.
+
+=head2 left_sister()
+
+Returns the node that's the immediate left sister of $node.  If $node
+is the leftmost (or only) daughter of its mother (or has no mother),
+then this returns undef.
+
+See also L</add_left_sisters(LIST)> and L</add_right_sisters(LIST)>.
+
+=head2 left_sisters()
+
+Returns a list of nodes that're sisters to the left of $node.  If
+$node is the leftmost (or only) daughter of its mother (or has no
+mother), then this returns an empty list.
+
+See also L</add_left_sisters(LIST)> and L</add_right_sisters(LIST)>.
+
+=head2 lol_to_tree($lol)
+
+This must be called as a class method.
 
 Converts something like bracket-notation for "Chomsky trees" (or
 rather, the closest you can come with Perl
@@ -1106,11 +771,265 @@ is okay, although it'd probably occur to you to denote it only as:
 
 which is of course fine, too.
 
-=cut
+=head2 mother()
 
-#--------------------------------------------------------------------------
+This returns what node is $node's mother.  This is undef if $node has
+no mother -- i.e., if it is a root.
 
-=item $node->tree_to_lol_notation({...options...})
+See also L</is_root()> and L</root()>.
+
+=head2 my_daughter_index()
+
+Returns what index this daughter is, in its mother's C<daughter> list.
+In other words, if $node is ($node->mother->daughters)[3], then
+$node->my_daughter_index returns 3.
+
+As a special case, returns 0 if $node has no mother.
+
+=head2 name()
+
+=head2 name(SCALAR)
+
+In the first form, returns the value of the node object's "name"
+attribute.  In the second form, sets it to the value of SCALAR.
+
+=head2 new_daughter()
+
+=head2 new_daughter({...options...})
+
+This B<constructs> a B<new> node (of the same class as $mother), and
+adds it to the (right) end of the daughter list of $mother. This is
+essentially the same as going
+
+      $daughter = $mother->new;
+      $mother->add_daughter($daughter);
+
+but is rather more efficient because (since $daughter is guaranteed new
+and isn't linked to/from anything), it doesn't have to check that
+$daughter isn't an ancestor of $mother, isn't already daughter to a
+mother it needs to be unlinked from, isn't already in $mother's
+daughter list, etc.
+
+As you'd expect for a constructor, it returns the node-object created.
+
+# Note that if you radically change 'mother'/'daughters' bookkeeping,
+# you may have to change this routine, since it's one of the places
+# that directly writes to 'daughters' and 'mother'.
+
+=head2 new_daughter_left()
+
+=head2 new_daughter_left({...options...})
+
+This is just like $mother->new_daughter, but adds the new daughter
+to the left (start) of $mother's daughter list.
+
+# Note that if you radically change 'mother'/'daughters' bookkeeping,
+# you may have to change this routine, since it's one of the places
+# that directly writes to 'daughters' and 'mother'.
+
+=head2 random_network({...options...})
+
+This method can be called as a class method or as an object method.
+
+In the first case, constructs a randomly arranged network under a new
+node, and returns the root node of that tree.  In the latter case,
+constructs the network under $node.
+
+Currently, this is implemented a bit half-heartedly, and
+half-wittedly.  I basically needed to make up random-looking networks
+to stress-test the various tree-dumper methods, and so wrote this.  If
+you actually want to rely on this for any application more
+serious than that, I suggest examining the source code and seeing if
+this does really what you need (say, in reliability of randomness);
+and feel totally free to suggest changes to me (especially in the form
+of "I rewrote C<random_network>, here's the code...")
+
+It takes four options:
+
+* max_node_count -- maximum number of nodes this tree will be allowed
+to have (counting the root).  Defaults to 25.
+
+* min_depth -- minimum depth for the tree.  Defaults to 2.  Leaves can
+be generated only after this depth is reached, so the tree will be at
+least this deep -- unless max_node_count is hit first.
+
+* max_depth -- maximum depth for the tree.  Defaults to 3 plus
+min_depth.  The tree will not be deeper than this.
+
+* max_children -- maximum number of children any mother in the tree
+can have.  Defaults to 4.
+
+=head2 remove_daughter(LIST)
+
+An exact synonym for L</remove_daughters(LIST)>.
+
+=head2 remove_daughters(LIST)
+
+This removes the nodes listed in LIST from $mother's daughter list.
+This is a no-operation if LIST is empty.  If there are things in LIST
+that aren't a current daughter of $mother, they are ignored.
+
+Not to be confused with L</clear_daughters()>.
+
+=head2 replace_with(LIST)
+
+This replaces $node in its mother's daughter list, by unlinking $node
+and replacing it with the items in LIST.  This returns a list consisting
+of $node followed by LIST, i.e., the nodes that replaced it.
+
+LIST can include $node itself (presumably at most once).  LIST can
+also be empty-list.  However, if any items in LIST are sisters to
+$node, they are ignored, and are not in the copy of LIST passed as the
+return value.
+
+As you might expect for any linking operation, the items in LIST
+cannot be $node's mother, or any ancestor to it; and items in LIST are,
+of course, unlinked from their mothers (if they have any) as they're
+linked to $node's mother.
+
+(In the special (and bizarre) case where $node is root, this simply calls
+$this->unlink_from_mother on all the items in LIST, making them roots of
+their own trees.)
+
+Note that the daughter-list of $node is not necessarily affected; nor
+are the daughter-lists of the items in LIST.  I mention this in case you
+think replace_with switches one node for another, with respect to its
+mother list B<and> its daughter list, leaving the rest of the tree
+unchanged. If that's what you want, replacing $Old with $New, then you
+want:
+
+  $New->set_daughters($Old->clear_daughters);
+  $Old->replace_with($New);
+
+(I can't say $node's and LIST-items' daughter lists are B<never>
+affected my replace_with -- they can be affected in this case:
+
+  $N1 = ($node->daughters)[0]; # first daughter of $node
+  $N2 = ($N1->daughters)[0];   # first daughter of $N1;
+  $N3 = Tree::DAG_Node->random_network; # or whatever
+  $node->replace_with($N1, $N2, $N3);
+
+As a side affect of attaching $N1 and $N2 to $node's mother, they're
+unlinked from their parents ($node, and $N1, replectively).
+But N3's daughter list is unaffected.
+
+In other words, this method does what it has to, as you'd expect it
+to.
+
+=head2 replace_with_daughters()
+
+This replaces $node in its mother's daughter list, by unlinking $node
+and replacing it with its daughters.  In other words, $node becomes
+motherless and daughterless as its daughters move up and take its place.
+This returns a list consisting of $node followed by the nodes that were
+its daughters.
+
+In the special (and bizarre) case where $node is root, this simply
+unlinks its daughters from it, making them roots of their own trees.
+
+Effectively the same as $node->replace_with($node->daughters), but more
+efficient, since less checking has to be done.  (And I also think
+$node->replace_with_daughters is a more common operation in
+tree-wrangling than $node->replace_with(LIST), so deserves a named
+method of its own, but that's just me.)
+
+# Note that if you radically change 'mother'/'daughters' bookkeeping,
+# you may have to change this routine, since it's one of the places
+# that directly writes to 'daughters' and 'mother'.
+
+=head2 right_sister()
+
+Returns the node that's the immediate right sister of $node.  If $node
+is the rightmost (or only) daughter of its mother (or has no mother),
+then this returns undef.
+
+See also L</add_left_sisters(LIST)> and L</add_right_sisters(LIST)>.
+
+=head2 right_sisters()
+
+Returns a list of nodes that're sisters to the right of $node. If
+$node is the rightmost (or only) daughter of its mother (or has no
+mother), then this returns an empty list.
+
+See also L</add_left_sisters(LIST)> and L</add_right_sisters(LIST)>.
+
+=head2 root()
+
+Returns the root of whatever tree $node is a member of.  If $node is
+the root, then the result is $node itself.
+
+Not to be confused with L</is_root()>.
+
+=head2 self_and_descendants()
+
+Returns a list consisting of itself (as element 0) and all the
+descendants of $node.  Returns just itself if $node is a
+terminal_node.
+
+(Note that it's spelled "descendants", not "descendents".)
+
+=head2 self_and_sisters()
+
+Returns a list of all nodes (going left-to-right) that have the same
+mother as $node -- including $node itself. This is just like
+$node->mother->daughters, except that that fails where $node is root,
+whereas $root->self_and_siblings, as a special case, returns $root.
+
+(Contrary to how you may interpret how this method is named, "self" is
+not (necessarily) the first element of what's returned.)
+
+=head2 set_daughters(LIST)
+
+This unlinks all $mother's daughters, and replaces them with the
+daughters in LIST.
+
+Currently implemented as just $mother->clear_daughters followed by
+$mother->add_daughters(LIST).
+
+=head2 simple_lol_to_tree($simple_lol)
+
+This must be called as a class method.
+
+This is like lol_to_tree, except that rule 1 doesn't apply -- i.e.,
+all scalars (or really, anything not a listref) in the LoL-structure
+end up as named terminal nodes, and only terminal nodes get names
+(and, of course, that name comes from that scalar value).  This method
+is useful for making things like expression trees, or at least
+starting them off.  Consider that this:
+
+    $tree = Tree::DAG_Node->simple_lol_to_tree(
+      [ 'foo', ['bar', ['baz'], 'quux'], 'zaz', 'pati' ]
+    );
+
+converts from something like a Lispish or Iconish tree, if you pretend
+the brackets are parentheses.
+
+Note that there is a (possibly surprising) degenerate case of what I'm
+calling a "simple-LoL", and it's like this:
+
+  $tree = Tree::DAG_Node->simple_lol_to_tree('Lonely');
+
+This is the (only) way you can specify a tree consisting of only a
+single node, which here gets the name 'Lonely'.
+
+=head2 sisters()
+
+Returns a list of all nodes (going left-to-right) that have the same
+mother as $node -- B<not including> $node itself.  If $node is root,
+this returns empty-list.
+
+=head2 tree_to_lol()
+
+Returns that tree (starting at $node) represented as a LoL, like what
+$lol, above, holds.  (This is as opposed to C<tree_to_lol_notation>,
+which returns the viewable code like what gets evaluated and stored in
+$lol, above.)
+
+Lord only knows what you use this for -- maybe for feeding to
+Data::Dumper, in case C<tree_to_lol_notation> doesn't do just what you
+want?
+
+=head2 tree_to_lol_notation({...options...})
 
 Dumps a tree (starting at $node) as the sort of LoL-like bracket
 notation you see in the above example code.  Returns just one big
@@ -1137,56 +1056,7 @@ Doing this:
 prints the same content, just spread over many lines, and prettily
 indented.
 
-=cut
-
-#--------------------------------------------------------------------------
-
-#--------------------------------------------------------------------------
-
-=item $node->tree_to_lol
-
-Returns that tree (starting at $node) represented as a LoL, like what
-$lol, above, holds.  (This is as opposed to C<tree_to_lol_notation>,
-which returns the viewable code like what gets evaluated and stored in
-$lol, above.)
-
-Lord only knows what you use this for -- maybe for feeding to
-Data::Dumper, in case C<tree_to_lol_notation> doesn't do just what you
-want?
-
-=cut
-
-###########################################################################
-
-=item the constructor CLASS->simple_lol_to_tree($simple_lol);
-
-This is like lol_to_tree, except that rule 1 doesn't apply -- i.e.,
-all scalars (or really, anything not a listref) in the LoL-structure
-end up as named terminal nodes, and only terminal nodes get names
-(and, of course, that name comes from that scalar value).  This method
-is useful for making things like expression trees, or at least
-starting them off.  Consider that this:
-
-    $tree = Tree::DAG_Node->simple_lol_to_tree(
-      [ 'foo', ['bar', ['baz'], 'quux'], 'zaz', 'pati' ]
-    );
-
-converts from something like a Lispish or Iconish tree, if you pretend
-the brackets are parentheses.
-
-Note that there is a (possibly surprising) degenerate case of what I'm
-calling a "simple-LoL", and it's like this:
-
-  $tree = Tree::DAG_Node->simple_lol_to_tree('Lonely');
-
-This is the (only) way you can specify a tree consisting of only a
-single node, which here gets the name 'Lonely'.
-
-=cut
-
-#--------------------------------------------------------------------------
-
-=item $node->tree_to_simple_lol
+=head2 tree_to_simple_lol()
 
 Returns that tree (starting at $node) represented as a simple-LoL --
 i.e., one where non-terminal nodes are represented as listrefs, and
@@ -1198,152 +1068,69 @@ the same as $node->name.
 
 Compare to tree_to_simple_lol_notation.
 
-=cut
-
-#--------------------------------------------------------------------------
-
-=item $node->tree_to_simple_lol_notation({...options...})
+=head2 tree_to_simple_lol_notation({...options...})
 
 A simple-LoL version of tree_to_lol_notation (which see); takes the
 same options.
 
-=cut
+=head2 unlink_from_mother()
 
-###########################################################################
-#  $list_r = $root_node->draw_ascii_tree({ h_compact => 1});
-#  print map("$_\n", @$list_r);
+This removes node from the daughter list of its mother.  If it has no
+mother, this is a no-operation.
 
-=item $list_r = $node->draw_ascii_tree({ ... options ... })
+Returns the mother unlinked from (if any).
 
-Draws a nice ASCII-art representation of the tree structure
-at-and-under $node, with $node at the top.  Returns a reference to the
-list of lines (with no "\n"s or anything at the end of them) that make
-up the picture.
+=head2 walk_down({callback => \&foo, callbackback => \&foo, ... })
 
-Example usage:
+Performs a depth-first traversal of the structure at and under $node.
+What it does at each node depends on the value of the options hashref,
+which you must provide.  There are three options, "callback" and
+"callbackback" (at least one of which must be defined, as a sub
+reference), and "_depth".  This is what C<walk_down> does, in
+pseudocode form:
 
-  print map("$_\n", @{$tree->draw_ascii_tree});
+* Start at the $node given.
 
-draw_ascii_tree takes parameters you set in the options hashref:
+* If there's a C<callback>, call it with $node as the first argument,
+and the options hashref as the second argument (which contains the
+potentially useful C<_depth>, remember).  This function must return
+true or false -- if false, it will block the next step:
 
-* "no_name" -- if true, C<draw_ascii_tree> doesn't print the name of
-the node; simply prints a "*".  Defaults to 0 (i.e., print the node
-name.)
+* If $node has any daughter nodes, increment C<_depth>, and call
+$daughter->walk_down(options_hashref) for each daughter (in order, of
+course), where options_hashref is the same hashref it was called with.
+When this returns, decrements C<_depth>.
 
-* "h_spacing" -- number 0 or greater.  Sets the number of spaces
-inserted horizontally between nodes (and groups of nodes) in a tree.
-Defaults to 1.
+* If there's a C<callbackback>, call just it as with C<callback> (but
+tossing out the return value).  Note that C<callback> returning false
+blocks traversal below $node, but doesn't block calling callbackback
+for $node.  (Incidentally, in the unlikely case that $node has stopped
+being a node object, C<callbackback> won't get called.)
 
-* "h_compact" -- number 0 or 1.  Sets the extent to which
-C<draw_ascii_tree> tries to save horizontal space.  Defaults to 1.  If
-I think of a better scrunching algorithm, there'll be a "2" setting
-for this.
+* Return.
 
-* "v_compact" -- number 0, 1, or 2.  Sets the degree to which
-C<draw_ascii_tree> tries to save vertical space.  Defaults to 1.
+$node->walk_down is the way to recursively do things to a tree (if you
+start at the root) or part of a tree; if what you're doing is best done
+via pre-pre order traversal, use C<callback>; if what you're doing is
+best done with post-order traversal, use C<callbackback>.
+C<walk_down> is even the basis for plenty of the methods in this
+class.  See the source code for examples both simple and horrific.
 
-This occasionally returns trees that are a bit cock-eyed in parts; if
-anyone can suggest a better drawing algorithm, I'd be appreciative.
+Note that if you don't specify C<_depth>, it effectively defaults to
+0.  You should set it to scalar($node->ancestors) if you want
+C<_depth> to reflect the true depth-in-the-tree for the nodes called,
+instead of just the depth below $node.  (If $node is the root, there's
+difference, of course.)
 
-=cut
+And B<by the way>, it's a bad idea to modify the tree from the callback.
+Unpredictable things may happen.  I instead suggest having your callback
+add to a stack of things that need changing, and then, once C<walk_down>
+is all finished, changing those nodes from that stack.
 
-###########################################################################
+Note that the existence of C<walk_down> doesn't mean you can't write
+you own special-use traversers.
 
-=item $node->copy_tree or $node->copy_tree({...options...})
-
-This returns the root of a copy of the tree that $node is a member of.
-If you pass no options, copy_tree pretends you've passed {}.
-
-This method is currently implemented as just a call to
-$this->root->copy_at_and_under({...options...}), but magic may be
-added in the future.
-
-Options you specify are passed down to calls to $node->copy.
-
-=cut
-
-=item $node->copy_at_and_under or $node->copy_at_and_under({...options...})
-
-This returns a copy of the subtree consisting of $node and everything
-under it.
-
-If you pass no options, copy_at_and_under pretends you've passed {}.
-
-This works by recursively building up the new tree from the leaves,
-duplicating nodes using $orig_node->copy($options_ref) and then
-linking them up into a new tree of the same shape.
-
-Options you specify are passed down to calls to $node->copy.
-
-=cut
-
-###########################################################################
-
-=item $node->delete_tree
-
-Destroys the entire tree that $node is a member of (starting at the
-root), by nulling out each node-object's attributes (including, most
-importantly, its linkage attributes -- hopefully this is more than
-sufficient to eliminate all circularity in the data structure), and
-then moving it into the class DEADNODE.
-
-Use this when you're finished with the tree in question, and want to
-free up its memory.  (If you don't do this, it'll get freed up anyway
-when your program ends.)
-
-If you try calling any methods on any of the node objects in the tree
-you've destroyed, you'll get an error like:
-
-  Can't locate object method "leaves_under"
-    via package "DEADNODE".
-
-So if you see that, that's what you've done wrong.  (Actually, the
-class DEADNODE does provide one method: a no-op method "delete_tree".
-So if you want to delete a tree, but think you may have deleted it
-already, it's safe to call $node->delete_tree on it (again).)
-
-The C<delete_tree> method is needed because Perl's garbage collector
-would never (as currently implemented) see that it was time to
-de-allocate the memory the tree uses -- until either you call
-$node->delete_tree, or until the program stops (at "global
-destruction" time, when B<everything> is unallocated).
-
-Incidentally, there are better ways to do garbage-collecting on a
-tree, ways which don't require the user to explicitly call a method
-like C<delete_tree> -- they involve dummy classes, as explained at
-C<http://mox.perl.com/misc/circle-destroy.pod>
-
-However, introducing a dummy class concept into Tree::DAG_Node would
-be rather a distraction.  If you want to do this with your derived
-classes, via a DESTROY in a dummy class (or in a tree-metainformation
-class, maybe), then feel free to.
-
-The only case where I can imagine C<delete_tree> failing to totally
-void the tree, is if you use the hashref in the "attributes" attribute
-to store (presumably among other things) references to other nodes'
-"attributes" hashrefs -- which 1) is maybe a bit odd, and 2) is your
-problem, because it's your hash structure that's circular, not the
-tree's.  Anyway, consider:
-
-      # null out all my "attributes" hashes
-      $anywhere->root->walk_down({
-        'callback' => sub {
-          $hr = $_[0]->attributes; %$hr = (); return 1;
-        }
-      });
-      # And then:
-      $anywhere->delete_tree;
-
-(I suppose C<delete_tree> is a "destructor", or as close as you can
-meaningfully come for a circularity-rich data structure in Perl.)
-
-=cut
-
-###########################################################################
-
-=back
-
-=head2 When and How to Destroy
+=head1 WHEN AND HOW TO DESTROY THE TREE
 
 It should be clear to you that if you've built a big parse tree or
 something, and then you're finished with it, you should call
@@ -1454,6 +1241,48 @@ problems.  (Be sure to consider the case of $obj->name as a write
 method, as it's used in C<lol_to_tree> and C<random_network>.)
 
 =head1 FAQ
+
+=head2 How to process every node in tree?
+
+See L</walk_down({callback => \&foo, callbackback => \&foo, ... })>.
+
+=head2 How do I switch from Tree to Tree::DAG_Node?
+
+=over 4
+
+=item o The node's name
+
+In Tree you use $node -> value and in Tree::DAG_Node it's $node -> name.
+
+=item o The node's attributes
+
+In Tree you use $node -> meta and in Tree::DAG_Node it's $node -> attributes.
+
+=back
+
+=head2 Are the techniques for processing lists of nodes?
+
+=over 4
+
+=item o Copy the daughter list, and change it
+
+	@them    = $mother->daughters;
+	@removed = splice(@them, 0, 2, @new_nodes);
+
+	$mother->set_daughters(@them);
+
+=item o Select a sub-set of nodes
+
+	$mother->set_daughters
+	(
+		grep($_->name =~ /wanted/, $mother->daughters)
+	);
+
+=back
+
+=head2 Why did you break up the sections of methods in the POD?
+
+Because I want to list the methods in alphabetical order.
 
 =head2 Why did you move the POD to the end?
 
