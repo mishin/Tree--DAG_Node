@@ -289,7 +289,7 @@ Please see the source for more information.
 
 =back
 
-=head1 Methods
+=head1 METHODS
 
 =head2 add_daughter(LIST)
 
