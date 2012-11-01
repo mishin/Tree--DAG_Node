@@ -23,10 +23,10 @@ sub format_node
 
 sub hashref2string
 {
-	my($self, $h) = @_;
-	$h ||= {};
+	my($self, $hashref) = @_;
+	$hashref ||= {};
 
-	return '{' . join(', ', map{qq|$_ => "$$h{$_}"|} sort keys %$h) . '}';
+	return '{' . join(', ', map{qq|$_ => "$$hashref{$_}"|} sort keys %$hashref) . '}';
 
 } # End of hashref2string.
 

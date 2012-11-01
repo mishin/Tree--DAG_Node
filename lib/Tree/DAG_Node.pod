@@ -8,10 +8,11 @@ Tree::DAG_Node - An N-ary tree
 
 Using as a base class:
 
-	package Game::Tree::Node; # or whatever you're doing
-	parent 'Tree::DAG_Node';
+	package Game::Tree::Node;
 
-	# Add your own methods overriding/extending the methods in Tree::DAG_Node...
+	use parent 'Tree::DAG_Node';
+
+	# Now add your own methods overriding/extending the methods in Tree::DAG_Node...
 
 Using as a class of its own:
 
@@ -36,31 +37,43 @@ mother or ancestor, or having a node have two mothers).
 
 This is what I mean by a "tree structure", a bit redundantly stated:
 
-* A tree is a special case of an acyclic directed graph.
+=over 4
 
-* A tree is a network of nodes where there's exactly one root
-node (i.e., 'the top'), and the only primary relationship between nodes
-is the mother-daugher relationship.
+=item o A tree is a special case of an acyclic directed graph
 
-* No node can be its own mother, or its mother's mother, etc.
+=item o A tree is a network of nodes where there's exactly one root node
 
-* Each node in the tree has exactly one "parent" (node in the "up"
-direction) -- except the root, which is parentless.
+Also, the only primary relationship between nodes is the mother-daughter relationship.
 
-* Each node can have any number (0 to any finite number) of daughter
-nodes.  A given node's daughter nodes constitute an I<ordered> list.
-(However, you are free to consider this ordering irrelevant.
+=item o No node can be its own mother, or its mother's mother, etc
+
+=item o Each node in the tree has exactly one parent
+
+Except for the root of course, which is parentless.
+
+=item o Each node can have any number (0 .. N) daughter nodes
+
+A given node's daughter nodes constitute an I<ordered> list.
+
+However, you are free to consider this ordering irrelevant.
 Some applications do need daughters to be ordered, so I chose to
-consider this the general case.)
+consider this the general case.
 
-* A node can appear in only one tree, and only once in that tree.
+=item o A node can appear in only one tree, and only once in that tree
+
 Notably (notable because it doesn't follow from the two above points),
 a node cannot appear twice in its mother's daughter list.
 
-* In other words, there's an idea of up (toward the root) versus
-down (away from the root), and left (i.e., toward the start (index 0)
-of a given node's daughter list) versus right (toward the end of a
-given node's daughter list).
+=item o There's an idea of up versus down
+
+Up means towards to the root, and down means away from the root (and towards the leaves).
+
+=item o There's an idea of left versus right
+
+Left is toward the start (index 0) of a given node's daughter list, and right is toward the end of a
+given node's daughter list.
+
+=back
 
 Trees as described above have various applications, among them:
 representing syntactic constituency, in formal linguistics;
@@ -78,12 +91,12 @@ some reason ended up looking here, go look at L<AnyDBM_File>.)
 Many base classes are not usable except as such -- but Tree::DAG_Node
 can be used as a normal class.  You can go ahead and say:
 
-  use Tree::DAG_Node;
-  my $root = Tree::DAG_Node->new();
-  $root->name("I'm the tops");
-  $new_daughter = Tree::DAG_Node->new();
-  $new_daughter->name("More");
-  $root->add_daughter($new_daughter);
+	use Tree::DAG_Node;
+	my $root = Tree::DAG_Node->new();
+	$root->name("I'm the tops");
+	$new_daughter = Tree::DAG_Node->new();
+	$new_daughter->name("More");
+	$root->add_daughter($new_daughter);
 
 and so on, constructing and linking objects from Tree::DAG_Node and
 making useful tree structures out of them.
@@ -110,17 +123,17 @@ The attributes of a node-object are:
 
 =over
 
-=item mother -- this node's mother.  undef if this is a root.
+=item o mother -- this node's mother.  undef if this is a root
 
-=item daughters -- the (possibly empty) list of daughters of this node.
+=item o daughters -- the (possibly empty) list of daughters of this node
 
-=item name -- the name for this node.
+=item o name -- the name for this node
 
 Need not be unique, or even printable.  This is printed in some of the
 various dumper methods, but it's up to you if you don't put anything
 meaningful or printable here.
 
-=item attributes -- whatever the user wants to use it for.
+=item o attributes -- whatever the user wants to use it for
 
 Presumably a hashref to whatever other attributes the user wants to
 store without risk of colliding with the object's real attributes.
@@ -415,7 +428,7 @@ root itself.
 
 =head2 attribute(SCALAR)
 
-Exact synonyms for L</attributes() and L</attributes(SCALAR)>.
+Exact synonyms for L</attributes()> and L</attributes(SCALAR)>.
 
 =head2 attributes()
 
@@ -575,39 +588,78 @@ empty-list if $node is a terminal_node.
 
 (Note that it's spelled "descendants", not "descendents".)
 
-=head2 draw_ascii_tree({ ... options ... })
+=head2 draw_ascii_tree([$options])
 
-Returns an arrayref of lines.
+Here, the [] refer to an optional parameter.
 
-Draws a nice ASCII-art representation of the tree structure
-at-and-under $node, with $node at the top.  Returns a reference to the
-list of lines (with no "\n"s or anything at the end of them) that make
-up the picture.
+Returns an arrayref of lines suitable for printing.
+
+Draws a nice ASCII-art representation of the tree structure.
+
+The tree looks like:
+
+	             |
+	          <Root>
+	   /-------+-----+---+---\
+	   |       |     |   |   |
+	  <I>     <H>   <D> <E> <B>
+	 /---\   /---\   |   |   |
+	 |   |   |   |  <F> <F> <C>
+	<J> <J> <J> <J>  |   |
+	 |   |   |   |  <G> <G>
+	<K> <L> <K> <L>
+	     |       |
+	    <M>     <M>
+	     |       |
+	    <N>     <N>
+	     |       |
+	    <O>     <O>
+
+See t/demo.t.
 
 Example usage:
 
   print map("$_\n", @{$tree->draw_ascii_tree});
 
-draw_ascii_tree takes parameters you set in the options hashref:
+I<draw_ascii_tree()> takes parameters you set in the $options hashref:
 
-* "no_name" -- if true, C<draw_ascii_tree> doesn't print the name of
-the node; simply prints a "*".  Defaults to 0 (i.e., print the node
-name.)
+=over 4
 
-* "h_spacing" -- number 0 or greater.  Sets the number of spaces
-inserted horizontally between nodes (and groups of nodes) in a tree.
-Defaults to 1.
+=item o h_compact
 
-* "h_compact" -- number 0 or 1.  Sets the extent to which
-C<draw_ascii_tree> tries to save horizontal space.  Defaults to 1.  If
-I think of a better scrunching algorithm, there'll be a "2" setting
+Takes 0 or 1.  Sets the extent to which
+I<draw_ascii_tree()> tries to save horizontal space.
+
+If I think of a better scrunching algorithm, there'll be a "2" setting
 for this.
 
-* "v_compact" -- number 0, 1, or 2.  Sets the degree to which
-C<draw_ascii_tree> tries to save vertical space.  Defaults to 1.
+Default: 1.
 
-This occasionally returns trees that are a bit cock-eyed in parts; if
+=item o h_spacing
+
+Takes a number 0 or greater.  Sets the number of spaces
+inserted horizontally between nodes (and groups of nodes) in a tree.
+
+Default: 1.
+
+=item o no_name
+
+If true, I<draw_ascii_tree()> doesn't print the name of
+the node; it simply prints a "*".
+
+Default: 0 (i.e., print the node name.)
+
+=item o v_compact
+
+Takes a number 0, 1, or 2.  Sets the degree to which
+I<draw_ascii_tree()> tries to save vertical space.  Defaults to 1.
+
+=back
+
+The code occasionally returns trees that are a bit cock-eyed in parts; if
 anyone can suggest a better drawing algorithm, I'd be appreciative.
+
+See also L</tree2string([$options], [$some_tree])>.
 
 =head2 dump_names({ ...options... })
 
@@ -631,6 +683,32 @@ to empty-string suppresses indenting.
 
 The dump is not printed, but is returned as a list, where each
 item is a line, with a "\n" at the end.
+
+=head2 format_node([$options], [$node])
+
+Here, [] represent optional parameters.
+
+Returns a string consisting of the node's name and, optionally, it's attributes.
+
+Possible keys in the $options hashref:
+
+=over 4
+
+=item o no_attributes
+
+If given a true value, the node's attributes are not included in the string returned.
+
+Default: 0 (include attributes).
+
+=back
+
+Calls L</hashref2string($hashref)>.
+
+Called by L</node2string([$options], [$node])>.
+
+You would not normally call this method.
+
+If you don't wish to supply options, use format_node({}, $node).
 
 =head2 generation()
 
@@ -667,6 +745,12 @@ $node->generation_under($node) returns just $node.
 
 If you call $node->generation_under($node) but NODE2 is not $node or an
 ancestor of $node, it behaves as if you called just $node->generation().
+
+head2 hashref2string($hashref)
+
+Returns the given hashref as a string.
+
+Called by L</format_node([$options], [$node])>.
 
 =head2 is_daughter_of($node2)
 
@@ -826,6 +910,26 @@ to the left (start) of $mother's daughter list.
 # Note that if you radically change 'mother'/'daughters' bookkeeping,
 # you may have to change this routine, since it's one of the places
 # that directly writes to 'daughters' and 'mother'.
+
+=head2 node2string($options, $t, $vert_dashes)
+
+Returns a string of the node's name and attributes, with a leading indent, suitable for printing.
+
+Possible keys in the $options hashref:
+
+=over 4
+
+=item o no_attributes
+
+If given a true value, the node's attributes are not included in the string returned.
+
+Default: 0 (include attributes).
+
+=back
+
+Calls L</format_node([$options], [$node])>.
+
+Called by L</tree2string([$options], [$some_tree])>.
 
 =head2 random_network({...options...})
 
@@ -1072,6 +1176,96 @@ Compare to tree_to_simple_lol_notation.
 
 A simple-LoL version of tree_to_lol_notation (which see); takes the
 same options.
+
+=head2 tree2string([$options], [$some_tree])
+
+Here, the [] represent optional parameters.
+
+Returns an arrayref of lines, suitable for printing.
+
+Draws a nice ASCII-art representation of the tree structure.
+
+The tree looks like:
+
+	Root. Attributes: {# => "0"}
+	   |---I. Attributes: {# => "1"}
+	   |   |---J. Attributes: {# => "3"}
+	   |   |   |---K. Attributes: {# => "3"}
+	   |   |---J. Attributes: {# => "4"}
+	   |       |---L. Attributes: {# => "5"}
+	   |           |---M. Attributes: {# => "5"}
+	   |               |---N. Attributes: {# => "5"}
+	   |                   |---O. Attributes: {# => "5"}
+	   |---H. Attributes: {# => "2"}
+	   |   |---J. Attributes: {# => "3"}
+	   |   |   |---K. Attributes: {# => "3"}
+	   |   |---J. Attributes: {# => "4"}
+	   |       |---L. Attributes: {# => "5"}
+	   |           |---M. Attributes: {# => "5"}
+	   |               |---N. Attributes: {# => "5"}
+	   |                   |---O. Attributes: {# => "5"}
+	   |---D. Attributes: {# => "6"}
+	   |   |---F. Attributes: {# => "8"}
+	   |       |---G. Attributes: {# => "8"}
+	   |---E. Attributes: {# => "7"}
+	   |   |---F. Attributes: {# => "8"}
+	   |       |---G. Attributes: {# => "8"}
+	   |---B. Attributes: {# => "9"}
+	       |---C. Attributes: {# => "9"}
+
+Or, without attributes:
+
+	Root
+	   |---I
+	   |   |---J
+	   |   |   |---K
+	   |   |---J
+	   |       |---L
+	   |           |---M
+	   |               |---N
+	   |                   |---O
+	   |---H
+	   |   |---J
+	   |   |   |---K
+	   |   |---J
+	   |       |---L
+	   |           |---M
+	   |               |---N
+	   |                   |---O
+	   |---D
+	   |   |---F
+	   |       |---G
+	   |---E
+	   |   |---F
+	   |       |---G
+	   |---B
+	       |---C
+
+See t/demo.t.
+
+Example usage:
+
+  print map("$_\n", @{$tree->tree2string});
+
+Can be called with $some_tree set to any $node, and will print the tree assuming $node is the root.
+
+If you don't wish to supply options, use tree2string({}, $node).
+
+Possible keys in the $options hashref (which defaults to {}):
+
+=over 4
+
+=item o no_attributes
+
+If given a true value, the node's attributes are not included in the string returned.
+
+Default: 0 (include attributes).
+
+=back
+
+Calls L</node2string($options, $t, $vert_dashes)>.
+
+See also L</draw_ascii_tree([$options])>.
 
 =head2 unlink_from_mother()
 

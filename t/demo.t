@@ -155,6 +155,8 @@ print map{"$_\n"} @{$tree -> draw_ascii_tree};
 print '-' x 35, "\n";
 print map{"$_\n"} @{$tree -> tree2string};
 print '-' x 35, "\n";
+print map{"$_\n"} @{$tree -> tree2string({no_attributes => 1})};
+print '-' x 35, "\n";
 
 process_tree($tree);
 
