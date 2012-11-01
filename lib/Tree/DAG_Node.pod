@@ -12,7 +12,7 @@ Using as a base class:
 
 	use parent 'Tree::DAG_Node';
 
-	# Now add your own methods overriding/extending the methods in Tree::DAG_Node...
+	# Now add your own methods overriding/extending the methods in C<Tree::DAG_Node>...
 
 Using as a class of its own:
 
@@ -88,7 +88,7 @@ and are best treated with their own class.  Check CPAN for modules
 encapsulating B-Trees; or if you actually want a database, and for
 some reason ended up looking here, go look at L<AnyDBM_File>.)
 
-Many base classes are not usable except as such -- but Tree::DAG_Node
+Many base classes are not usable except as such -- but C<Tree::DAG_Node>
 can be used as a normal class.  You can go ahead and say:
 
 	use Tree::DAG_Node;
@@ -98,7 +98,7 @@ can be used as a normal class.  You can go ahead and say:
 	$new_daughter->name("More");
 	$root->add_daughter($new_daughter);
 
-and so on, constructing and linking objects from Tree::DAG_Node and
+and so on, constructing and linking objects from C<Tree::DAG_Node> and
 making useful tree structures out of them.
 
 =head1 A NOTE TO THE READER
@@ -116,7 +116,7 @@ sledgehammer B<will> kill that fly.
 
 Implementationally, each node in a tree is an object, in the sense of
 being an arbitrarily complex data structure that belongs to a class
-(presumably Tree::DAG_Node, or ones derived from it) that provides
+(presumably C<Tree::DAG_Node>, or ones derived from it) that provides
 methods.
 
 The attributes of a node-object are:
@@ -145,7 +145,7 @@ Aside from (by default) initializing it to {}, and having the access
 method called "attributes" (described a ways below), I don't do
 anything with the "attributes" in this module.  I basically intended
 this so that users who don't want/need to bother deriving a class
-from Tree::DAG_Node, could still attach whatever data they wanted in a
+from C<Tree::DAG_Node>, could still attach whatever data they wanted in a
 node.
 
 =back
@@ -177,15 +177,15 @@ B<definitely> if you're overriding linkage methods.
 
 =over
 
-=item the constructor CLASS->new() or CLASS->new({...options...})
+=item the constructor CLASS->new() or CLASS->new($options)
 
-This creates a new node object, calls $object->_init({...options...})
+This creates a new node object, calls $object->_init($options)
 to provide it sane defaults (like: undef name, undef mother, no
 daughters, 'attributes' setting of a new empty hashref), and returns
 the object created.  (If you just said "CLASS->new()" or "CLASS->new",
 then it pretends you called "CLASS->new({})".)
 
-Currently no options for putting in {...options...} are part
+Currently no options for putting in hashref $options are part
 of the documented interface, but the options is here in case
 you want to add such behavior in a derived class.
 
@@ -219,11 +219,11 @@ way.  Second off, it often requires subtly different syntax (e.g.,
 programmer and the user, without making either appreciably happier.
 
 (This is not to say that options in general for a constructor are bad
--- C<random_network>, discussed far below, necessarily takes options.
+-- L</random_network($options)>, discussed far below, necessarily takes options.
 But note that those are not options for the default values of
 attributes.)
 
-Anyway, if you use Tree::DAG_Node as a superclass, and you add
+Anyway, if you use C<Tree::DAG_Node> as a superclass, and you add
 attributes that need to be initialized, what you need to do is provide
 an _init method that calls $this->SUPER::_init($options) to use its
 superclass's _init method, and then initializes the new attributes:
@@ -274,26 +274,26 @@ _init_[attribute] method, like this:
   }
 
 All this bookkeeping looks silly with just one new attribute in a
-class derived straight from Tree::DAG_Node, but if there's lots of new
+class derived straight from C<Tree::DAG_Node>, but if there's lots of new
 attributes running around, and if you're deriving from a class derived
-from a class derived from Tree::DAG_Node, then tidy
+from a class derived from C<Tree::DAG_Node>, then tidy
 stratification/modularization like this can keep you sane.
 
-=item the constructor $obj->new() or $obj->new({...options...})
+=item the constructor $obj->new() or $obj->new($options)
 
-Just another way to get at the C<new> method. This B<does not copy>
+Just another way to get at the L</new()> method. This B<does not copy>
 $obj, but merely constructs a new object of the same class as it.
 Saves you the bother of going $class = ref $obj; $obj2 = $class->new;
 
-=item the method $node->_init({...options...})
+=item the method $node->_init($options)
 
 Initialize the object's attribute values.  See the discussion above.
-Presumably this should be called only by the guts of the C<new>
+Presumably this should be called only by the guts of the L</new()>
 constructor -- never by the end user.
 
-Currently there are no documented options for putting in
-{...options...}, but (in case you want to disregard the above rant)
-the option exists for you to use {...options...} for something useful
+Currently there are no documented options for putting in the
+$options hashref, but (in case you want to disregard the above rant)
+the option exists for you to use $options for something useful
 in a derived class.
 
 Please see the source for more information.
@@ -311,8 +311,8 @@ An exact synonym for L</add_daughters(LIST)>.
 =head2 add_daughters(LIST)
 
 This method adds the node objects in LIST to the (right) end of
-$mother's C<daughter> list.  Making a node N1 the daughter of another
-node N2 also means that N1's C<mother> attribute is "automatically" set
+$mother's I<daughter> list.  Making a node N1 the daughter of another
+node N2 also means that N1's I<mother> attribute is "automatically" set
 to N2; it also means that N1 stops being anything else's daughter as
 it becomes N2's daughter.
 
@@ -331,7 +331,7 @@ An exact synonym for L</add_daughters_left(LIST)>.
 
 =head2 add_daughters_left(LIST)
 
-This method is just like C<add_daughters>, except that it adds the
+This method is just like L</add_daughters(LIST)>, except that it adds the
 node objects in LIST to the (left) beginning of $mother's daughter
 list, instead of the (right) end of it.
 
@@ -483,7 +483,7 @@ that'll be undef if $node is root.
 
 =head2 copy_at_and_under()
 
-=head2 copy_at_and_under({...options...})
+=head2 copy_at_and_under($options)
 
 This returns a copy of the subtree consisting of $node and everything
 under it.
@@ -498,13 +498,13 @@ Options you specify are passed down to calls to $node->copy.
 
 =head2 copy_tree()
 
-=head2 copy_tree({...options...})
+=head2 copy_tree($options)
 
 This returns the root of a copy of the tree that $node is a member of.
 If you pass no options, copy_tree pretends you've passed {}.
 
 This method is currently implemented as just a call to
-$this->root->copy_at_and_under({...options...}), but magic may be
+$this->root->copy_at_and_under($options), but magic may be
 added in the future.
 
 Options you specify are passed down to calls to $node->copy.
@@ -536,7 +536,7 @@ class DEADNODE does provide one method: a no-op method "delete_tree".
 So if you want to delete a tree, but think you may have deleted it
 already, it's safe to call $node->delete_tree on it (again).)
 
-The C<delete_tree> method is needed because Perl's garbage collector
+The L</delete_tree()> method is needed because Perl's garbage collector
 would never (as currently implemented) see that it was time to
 de-allocate the memory the tree uses -- until either you call
 $node->delete_tree, or until the program stops (at "global
@@ -544,15 +544,15 @@ destruction" time, when B<everything> is unallocated).
 
 Incidentally, there are better ways to do garbage-collecting on a
 tree, ways which don't require the user to explicitly call a method
-like C<delete_tree> -- they involve dummy classes, as explained at
-C<http://mox.perl.com/misc/circle-destroy.pod>
+like L</delete_tree()> -- they involve dummy classes, as explained at
+L<http://mox.perl.com/misc/circle-destroy.pod>
 
-However, introducing a dummy class concept into Tree::DAG_Node would
+However, introducing a dummy class concept into C<Tree::DAG_Node> would
 be rather a distraction.  If you want to do this with your derived
 classes, via a DESTROY in a dummy class (or in a tree-metainformation
 class, maybe), then feel free to.
 
-The only case where I can imagine C<delete_tree> failing to totally
+The only case where I can imagine L</delete_tree()> failing to totally
 void the tree, is if you use the hashref in the "attributes" attribute
 to store (presumably among other things) references to other nodes'
 "attributes" hashrefs -- which 1) is maybe a bit odd, and 2) is your
@@ -568,7 +568,7 @@ tree's.  Anyway, consider:
       # And then:
       $anywhere->delete_tree;
 
-(I suppose C<delete_tree> is a "destructor", or as close as you can
+(I suppose L</delete_tree()> is a "destructor", or as close as you can
 meaningfully come for a circularity-rich data structure in Perl.)
 
 See also L</WHEN AND HOW TO DESTROY THE TREE>.
@@ -661,7 +661,7 @@ anyone can suggest a better drawing algorithm, I'd be appreciative.
 
 See also L</tree2string([$options], [$some_tree])>.
 
-=head2 dump_names({ ...options... })
+=head2 dump_names($options$)
 
 Returns an array.
 
@@ -714,14 +714,14 @@ If you don't wish to supply options, use format_node({}, $node).
 
 Returns a list of all nodes (going left-to-right) that are in $node's
 generation -- i.e., that are the some number of nodes down from
-the root.  $root->generation is just $root.
+the root.  $root->generation() is just $root.
 
 Of course, $node is always in its own generation.
 
-=head2 generation_under(NODE2)
+=head2 generation_under($node)
 
-Like $node->generation, but returns only the nodes in $node's generation
-that are also descendants of NODE2 -- in other words,
+Like L</generation()>, but returns only the nodes in $node's generation
+that are also descendants of $node -- in other words,
 
     @us = $node->generation_under( $node->mother->mother );
 
@@ -730,7 +730,7 @@ assuming $node does indeed have a grandmother.  Actually "cousins" isn't
 quite an apt word, because C<@us> ends up including $node's siblings and
 $node.
 
-Actually, C<generation_under> is just an alias to C<generation>, but I
+Actually, L</generation_under($node)> is just an alias to L</generation()>, but I
 figure that this:
 
    @us = $node->generation_under($way_upline);
@@ -760,7 +760,7 @@ Currently implemented as just a test of ($it->mother eq $node2).
 =head2 is_node()
 
 This always returns true.  More pertinently, $object->can('is_node')
-is true (regardless of what C<is_node> would do if called) for objects
+is true (regardless of what L</is_node()> would do if called) for objects
 belonging to this class or for any class derived from it.
 
 =head2 is_root()
@@ -877,9 +877,13 @@ As a special case, returns 0 if $node has no mother.
 In the first form, returns the value of the node object's "name"
 attribute.  In the second form, sets it to the value of SCALAR.
 
+=head2 new()
+
+See L</MAIN CONSTRUCTOR, AND INITIALIZER>.
+
 =head2 new_daughter()
 
-=head2 new_daughter({...options...})
+=head2 new_daughter($options)
 
 This B<constructs> a B<new> node (of the same class as $mother), and
 adds it to the (right) end of the daughter list of $mother. This is
@@ -902,7 +906,7 @@ As you'd expect for a constructor, it returns the node-object created.
 
 =head2 new_daughter_left()
 
-=head2 new_daughter_left({...options...})
+=head2 new_daughter_left($options)
 
 This is just like $mother->new_daughter, but adds the new daughter
 to the left (start) of $mother's daughter list.
@@ -931,7 +935,7 @@ Calls L</format_node([$options], [$node])>.
 
 Called by L</tree2string([$options], [$some_tree])>.
 
-=head2 random_network({...options...})
+=head2 random_network($options)
 
 This method can be called as a class method or as an object method.
 
@@ -946,7 +950,7 @@ you actually want to rely on this for any application more
 serious than that, I suggest examining the source code and seeing if
 this does really what you need (say, in reliability of randomness);
 and feel totally free to suggest changes to me (especially in the form
-of "I rewrote C<random_network>, here's the code...")
+of "I rewrote L</random_network($options)>, here's the code...")
 
 It takes four options:
 
@@ -1125,15 +1129,15 @@ this returns empty-list.
 =head2 tree_to_lol()
 
 Returns that tree (starting at $node) represented as a LoL, like what
-$lol, above, holds.  (This is as opposed to C<tree_to_lol_notation>,
+$lol, above, holds.  (This is as opposed to L</tree_to_lol_notation($options)>,
 which returns the viewable code like what gets evaluated and stored in
 $lol, above.)
 
 Lord only knows what you use this for -- maybe for feeding to
-Data::Dumper, in case C<tree_to_lol_notation> doesn't do just what you
+Data::Dumper, in case L</tree_to_lol_notation($options)> doesn't do just what you
 want?
 
-=head2 tree_to_lol_notation({...options...})
+=head2 tree_to_lol_notation($options)
 
 Dumps a tree (starting at $node) as the sort of LoL-like bracket
 notation you see in the above example code.  Returns just one big
@@ -1172,7 +1176,7 @@ the same as $node->name.
 
 Compare to tree_to_simple_lol_notation.
 
-=head2 tree_to_simple_lol_notation({...options...})
+=head2 tree_to_simple_lol_notation($options)
 
 A simple-LoL version of tree_to_lol_notation (which see); takes the
 same options.
@@ -1274,54 +1278,54 @@ mother, this is a no-operation.
 
 Returns the mother unlinked from (if any).
 
-=head2 walk_down({callback => \&foo, callbackback => \&foo, ... })
+=head2 walk_down({callback => \&foo, callbackback => \&foo, ...})
 
 Performs a depth-first traversal of the structure at and under $node.
 What it does at each node depends on the value of the options hashref,
 which you must provide.  There are three options, "callback" and
 "callbackback" (at least one of which must be defined, as a sub
-reference), and "_depth".  This is what C<walk_down> does, in
+reference), and "_depth".  This is what I<walk_down()> does, in
 pseudocode form:
 
 * Start at the $node given.
 
-* If there's a C<callback>, call it with $node as the first argument,
+* If there's a I<callback>, call it with $node as the first argument,
 and the options hashref as the second argument (which contains the
-potentially useful C<_depth>, remember).  This function must return
+potentially useful I<_depth>, remember).  This function must return
 true or false -- if false, it will block the next step:
 
-* If $node has any daughter nodes, increment C<_depth>, and call
+* If $node has any daughter nodes, increment I<_depth>, and call
 $daughter->walk_down(options_hashref) for each daughter (in order, of
 course), where options_hashref is the same hashref it was called with.
-When this returns, decrements C<_depth>.
+When this returns, decrements I<_depth>.
 
-* If there's a C<callbackback>, call just it as with C<callback> (but
-tossing out the return value).  Note that C<callback> returning false
+* If there's a I<callbackback>, call just it as with I<callback> (but
+tossing out the return value).  Note that I<callback> returning false
 blocks traversal below $node, but doesn't block calling callbackback
 for $node.  (Incidentally, in the unlikely case that $node has stopped
-being a node object, C<callbackback> won't get called.)
+being a node object, I<callbackback> won't get called.)
 
 * Return.
 
 $node->walk_down is the way to recursively do things to a tree (if you
 start at the root) or part of a tree; if what you're doing is best done
-via pre-pre order traversal, use C<callback>; if what you're doing is
-best done with post-order traversal, use C<callbackback>.
-C<walk_down> is even the basis for plenty of the methods in this
+via pre-pre order traversal, use I<callback>; if what you're doing is
+best done with post-order traversal, use I<callbackback>.
+I<walk_down> is even the basis for plenty of the methods in this
 class.  See the source code for examples both simple and horrific.
 
-Note that if you don't specify C<_depth>, it effectively defaults to
+Note that if you don't specify I<_depth>, it effectively defaults to
 0.  You should set it to scalar($node->ancestors) if you want
-C<_depth> to reflect the true depth-in-the-tree for the nodes called,
+I<_depth> to reflect the true depth-in-the-tree for the nodes called,
 instead of just the depth below $node.  (If $node is the root, there's
 difference, of course.)
 
 And B<by the way>, it's a bad idea to modify the tree from the callback.
 Unpredictable things may happen.  I instead suggest having your callback
-add to a stack of things that need changing, and then, once C<walk_down>
+add to a stack of things that need changing, and then, once I<walk_down()>
 is all finished, changing those nodes from that stack.
 
-Note that the existence of C<walk_down> doesn't mean you can't write
+Note that the existence of I<walk_down()> doesn't mean you can't write
 you own special-use traversers.
 
 =head1 WHEN AND HOW TO DESTROY THE TREE
@@ -1406,12 +1410,12 @@ fixes you come up with, tho.
 
 Currently I don't assume (or enforce) anything about the class
 membership of nodes being manipulated, other than by testing whether
-each one provides a method C<is_node>, a la:
+each one provides a method L</is_node()>, a la:
 
   die "Not a node!!!" unless UNIVERSAL::can($node, "is_node");
 
 So, as far as I'm concerned, a given tree's nodes are free to belong to
-different classes, just so long as they provide/inherit C<is_node>, the
+different classes, just so long as they provide/inherit L</is_node()>, the
 few methods that this class relies on to navigate the tree, and have the
 same internal object structure, or a superset of it. Presumably this
 would be the case for any object belonging to a class derived from
@@ -1424,21 +1428,21 @@ from this class should probably do this instead thru a method (via
 $node->mother, etc.), for sake of portability, abstraction, and general
 goodness.
 
-However, no routines in this class (aside from, necessarily, C<_init>,
-C<_init_name>, and C<name>) access the "name" attribute directly;
+However, no routines in this class (aside from, necessarily, I<_init()>,
+I<_init_name()>, and L</name()>) access the "name" attribute directly;
 routines (like the various tree draw/dump methods) get the "name" value
 thru a call to $obj->name().  So if you want the object's name to not be
 a real attribute, but instead have it derived dynamically from some feature
 of the object (say, based on some of its other attributes, or based on
-its address), you can to override the C<name> method, without causing
+its address), you can to override the L</name()> method, without causing
 problems.  (Be sure to consider the case of $obj->name as a write
-method, as it's used in C<lol_to_tree> and C<random_network>.)
+method, as it's used in I</lol_to_tree($lol)> and L</random_network($options)>.)
 
 =head1 FAQ
 
 =head2 How to process every node in tree?
 
-See L</walk_down({callback => \&foo, callbackback => \&foo, ... })>.
+See L</walk_down({callback => \&foo, callbackback => \&foo, ...})>.
 
 =head2 How do I switch from Tree to Tree::DAG_Node?
 
@@ -1446,11 +1450,11 @@ See L</walk_down({callback => \&foo, callbackback => \&foo, ... })>.
 
 =item o The node's name
 
-In Tree you use $node -> value and in Tree::DAG_Node it's $node -> name.
+In Tree you use $node -> value and in C<Tree::DAG_Node> it's $node -> name.
 
 =item o The node's attributes
 
-In Tree you use $node -> meta and in Tree::DAG_Node it's $node -> attributes.
+In Tree you use $node -> meta and in C<Tree::DAG_Node> it's $node -> attributes.
 
 =back
 
@@ -1488,6 +1492,8 @@ Because the apostrophes in the text confused the syntax hightlighter in my edito
 
 =item o L<HTML::Element>, L<HTML::Tree> and L<HTML::TreeBuilder>
 
+Sean is also the author of these modules.
+
 =item o L<Tree>
 
 Lightweight.
@@ -1510,7 +1516,7 @@ Uses L<Moose>.
 
 =back
 
-Tree::DAG_Node itself is also lightweight.
+C<Tree::DAG_Node> itself is also lightweight.
 
 =head1 REFERENCES
 

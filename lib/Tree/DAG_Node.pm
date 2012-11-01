@@ -9,191 +9,8 @@ $VERSION = '1.06';
 
 # -----------------------------------------------
 
-sub format_node
-{
-	my($self, $options, $node) = @_;
-	my($s) = $node -> name;
-	$s     .= '. Attributes: ' . $self -> hashref2string($node -> attributes) if (! defined $$options{no_attributes});
-
-	return $s;
-
-} # End of format_node.
-
-# -----------------------------------------------
-
-sub hashref2string
-{
-	my($self, $hashref) = @_;
-	$hashref ||= {};
-
-	return '{' . join(', ', map{qq|$_ => "$$hashref{$_}"|} sort keys %$hashref) . '}';
-
-} # End of hashref2string.
-
-# -----------------------------------------------
-
-sub is_root
-{
-	my($self) = @_;
-
-	return defined $self -> mother ? 0 : 1;
-
-} # End of is_root.
-
-# -----------------------------------------------
-
-sub node2string
-{
-	my($self, $options, $t, $vert_dashes) = @_;
-	my($depth)         = scalar($t -> ancestors) || 0;
-	my($sibling_count) = defined $t -> mother ? scalar $t -> self_and_sisters : 1;
-	my($offset)        = ' ' x 4;
-	my(@indent)        = map{$$vert_dashes[$_] || $offset} 0 .. $depth - 1;
-	@$vert_dashes      =
-	(
-		@indent,
-		($sibling_count == 1 ? $offset : '   |'),
-	);
-
-	if ($sibling_count == ($t -> my_daughter_index + 1) )
-	{
-		$$vert_dashes[$depth] = $offset;
-	}
-
-	return join('' => @indent[1 .. $#indent]) . ($depth ? '   |---' : '') . $self -> format_node($options, $t);
-
-} # End of node2string.
-
-# -----------------------------------------------
-
-sub tree2string
-{
-	my($self, $options, $tree) = @_;
-	$options ||= {};
-	$tree    ||= $self;
-
-	my(@out);
-	my(@vert_dashes);
-
-	$tree -> walk_down
-	({
-		callback =>
-		sub
-		{
-			my($node) = @_;
-
-			push @out, $self -> node2string($options, $node, \@vert_dashes);
-
-			return 1,
-		},
-		_depth => 0,
-	});
-
-	return [@out];
-
-} # End of tree2string.
-
-# -----------------------------------------------
-
-sub new { # constructor
-  my $class = shift;
-  $class = ref($class) if ref($class); # tchristic style.  why not?
-
-  my $o = ref($_[0]) eq 'HASH' ? $_[0] : {}; # o for options hashref
-  my $it = bless( {}, $class );
-  print "Constructing $it in class $class\n" if $Debug;
-  $it->_init( $o );
-  return $it;
-}
-
-# -----------------------------------------------
-
-sub _init { # method
-  my $this = shift;
-  my $o = ref($_[0]) eq 'HASH' ? $_[0] : {};
-
-  # Sane initialization.
-  $this->_init_mother($o);
-  $this->_init_daughters($o);
-  $this->_init_name($o);
-  $this->_init_attributes($o);
-
-  return;
-}
-
-# -----------------------------------------------
-
-sub _init_mother { # to be called by an _init
-  my($this, $o) = @_[0,1];
-
-  $this->{'mother'} = undef;
-
-  # Undocumented and disfavored.  Consider this just an example.
-  ( $o->{'mother'} )->add_daughter($this)
-    if defined($o->{'mother'}) && ref($o->{'mother'});
-  # DO NOT use this option (as implemented) with new_daughter or
-  #  new_daughter_left!!!!!
-  # BAD THINGS MAY HAPPEN!!!
-}
-
-# -----------------------------------------------
-
-sub _init_daughters { # to be called by an _init
-  my($this, $o) = @_[0,1];
-
-  $this->{'daughters'} = [];
-
-  # Undocumented and disfavored.  Consider this just an example.
-  $this->set_daughters( @{$o->{'daughters'}} )
-    if ref($o->{'daughters'}) && (@{$o->{'daughters'}});
-  # DO NOT use this option (as implemented) with new_daughter or
-  #  new_daughter_left!!!!!
-  # BAD THINGS MAY HAPPEN!!!
-}
-
-# -----------------------------------------------
-
-sub _init_name { # to be called by an _init
-  my($this, $o) = @_[0,1];
-
-  $this->{'name'} = undef;
-
-  # Undocumented and disfavored.  Consider this just an example.
-  $this->name( $o->{'name'} ) if exists $o->{'name'};
-}
-
-# -----------------------------------------------
-
-sub _init_attributes { # to be called by an _init
-  my($this, $o) = @_[0,1];
-
-  $this->{'attributes'} = {};
-
-  # Undocumented and disfavored.  Consider this just an example.
-  $this->attributes( $o->{'attributes'} ) if exists $o->{'attributes'};
-}
-
-# -----------------------------------------------
-
-sub daughters { # read-only attrib-method: returns a list.
-  my $this = shift;
-
-  if(@_) { # undoc'd and disfavored to use as a write-method
-    die "Don't set daughters with daughters anymore\n";
-    warn "my parameter must be a listref" unless ref($_[0]);
-    $this->{'daughters'} = $_[0];
-    $this->_update_daughter_links;
-  }
-  #return $this->{'daughters'};
-  return @{$this->{'daughters'} || []};
-}
-
-# -----------------------------------------------
-
-sub mother { # read-only attrib-method: returns an object (the mother node)
-  my $this = shift;
-  die "I'm a read-only method!" if @_;
-  return $this->{'mother'};
+sub add_daughter { # alias
+  my($it,@them) = @_;  $it->add_daughters(@them);
 }
 
 # -----------------------------------------------
@@ -210,8 +27,8 @@ sub add_daughters { # write-only method
 
 # -----------------------------------------------
 
-sub add_daughter { # alias
-  my($it,@them) = @_;  $it->add_daughters(@them);
+sub add_daughter_left { # alias
+  my($it,@them) = @_;  $it->add_daughters_left(@them);
 }
 
 # -----------------------------------------------
@@ -224,12 +41,6 @@ sub add_daughters_left { # write-only method
       sub { unshift @{$_[0]}, $_[1]; },
       @daughters
     );
-}
-
-# -----------------------------------------------
-
-sub add_daughter_left { # alias
-  my($it,@them) = @_;  $it->add_daughters_left(@them);
 }
 
 # -----------------------------------------------
@@ -278,170 +89,8 @@ sub _add_daughters_wrapper {
 
 # -----------------------------------------------
 
-sub _update_daughter_links {
-  # Eliminate any duplicates in my daughters list, and update
-  #  all my daughters' links to myself.
-  my $this = shift;
-
-  my $them = $this->{'daughters'};
-
-  # Eliminate duplicate daughters.
-  my %seen = ();
-  @$them = grep { ref($_) && not($seen{$_}++) } @$them;
-   # not that there should ever be duplicate daughters anyhoo.
-
-  foreach my $one (@$them) { # linkage bookkeeping
-    die "daughter <$one> isn't an object!" unless ref $one;
-    $one->{'mother'} = $this;
-  }
-  return;
-}
-
-# -----------------------------------------------
-
-sub new_daughter {
-  my($mother, @options) = @_;
-  my $daughter = $mother->new(@options);
-
-  push @{$mother->{'daughters'}}, $daughter;
-  $daughter->{'mother'} = $mother;
-
-  return $daughter;
-}
-
-# -----------------------------------------------
-
-sub new_daughter_left {
-  my($mother, @options) = @_;
-  my $daughter = $mother->new(@options);
-
-  unshift @{$mother->{'daughters'}}, $daughter;
-  $daughter->{'mother'} = $mother;
-
-  return $daughter;
-}
-
-# -----------------------------------------------
-
-sub remove_daughters { # write-only method
-  my($mother, @daughters) = @_;
-  die "mother must be an object!" unless ref $mother;
-  return unless @daughters;
-
-  my %to_delete;
-  @daughters = grep {ref($_)
-		       and defined($_->{'mother'})
-		       and $mother eq $_->{'mother'}
-                    } @daughters;
-  return unless @daughters;
-  @to_delete{ @daughters } = undef;
-
-  # This could be done better and more efficiently, I guess.
-  foreach my $daughter (@daughters) {
-    $daughter->{'mother'} = undef;
-  }
-  my $them = $mother->{'daughters'};
-  @$them = grep { !exists($to_delete{$_}) } @$them;
-
-  # $mother->_update_daughter_links; # unnecessary
-  return;
-}
-
-# -----------------------------------------------
-
-sub remove_daughter { # alias
-  my($it,@them) = @_;  $it->remove_daughters(@them);
-}
-
-# -----------------------------------------------
-
-sub unlink_from_mother {
-  my $node = $_[0];
-  my $mother = $node->{'mother'};
-  $mother->remove_daughters($node) if defined($mother) && ref($mother);
-  return $mother;
-}
-
-# -----------------------------------------------
-
-sub clear_daughters { # write-only method
-  my($mother) = $_[0];
-  my @daughters = @{$mother->{'daughters'}};
-
-  @{$mother->{'daughters'}} = ();
-  foreach my $one (@daughters) {
-    next unless UNIVERSAL::can($one, 'is_node'); # sanity check
-    $one->{'mother'} = undef;
-  }
-  # Another, simpler, way to do it:
-  #  $mother->remove_daughters($mother->daughters);
-
-  return @daughters; # NEW
-}
-
-# -----------------------------------------------
-
-sub set_daughters { # write-only method
-  my($mother, @them) = @_;
-  $mother->clear_daughters;
-  $mother->add_daughters(@them) if @them;
-  # yup, it's that simple
-}
-
-# -----------------------------------------------
-
-sub replace_with { # write-only method
-  my($this, @replacements) = @_;
-
-  if(not( defined($this->{'mother'}) && ref($this->{'mother'}) )) { # if root
-    foreach my $replacement (@replacements) {
-      $replacement->{'mother'}->remove_daughters($replacement)
-        if $replacement->{'mother'};
-    }
-      # make 'em roots
-  } else { # I have a mother
-    my $mother = $this->{'mother'};
-
-    #@replacements = grep(($_ eq $this  ||  $_->{'mother'} ne $mother),
-    #                     @replacements);
-    @replacements = grep { $_ eq $this
-                           || not(defined($_->{'mother'}) &&
-                                  ref($_->{'mother'}) &&
-                                  $_->{'mother'} eq $mother
-                                 )
-                         }
-                         @replacements;
-    # Eliminate sisters (but not self)
-    # i.e., I want myself or things NOT with the same mother as myself.
-
-    $mother->set_daughters(   # old switcheroo
-                           map($_ eq $this ? (@replacements) : $_ ,
-                               @{$mother->{'daughters'}}
-                              )
-                          );
-    # and set_daughters does all the checking and possible
-    # unlinking
-  }
-  return($this, @replacements);
-}
-
-# -----------------------------------------------
-
-sub replace_with_daughters { # write-only method
-  my($this) = $_[0]; # takes no params other than the self
-  my $mother = $this->{'mother'};
-  return($this, $this->clear_daughters)
-    unless defined($mother) && ref($mother);
-
-  my @daughters = $this->clear_daughters;
-  my $sib_r = $mother->{'daughters'};
-  @$sib_r = map($_ eq $this ? (@daughters) : $_,
-                @$sib_r   # old switcheroo
-            );
-  foreach my $daughter (@daughters) {
-    $daughter->{'mother'} = $mother;
-  }
-  return($this, @daughters);
+sub add_left_sister { # alias
+  my($it,@them) = @_;  $it->add_left_sisters(@them);
 }
 
 # -----------------------------------------------
@@ -457,8 +106,8 @@ sub add_left_sisters { # write-only method
 
 # -----------------------------------------------
 
-sub add_left_sister { # alias
-  my($it,@them) = @_;  $it->add_left_sisters(@them);
+sub add_right_sister { # alias
+  my($it,@them) = @_;  $it->add_right_sisters(@them);
 }
 
 # -----------------------------------------------
@@ -472,278 +121,6 @@ sub add_right_sisters { # write-only method
 }
 
 # -----------------------------------------------
-
-sub add_right_sister { # alias
-  my($it,@them) = @_;  $it->add_right_sisters(@them);
-}
-
-# -----------------------------------------------
-
-sub name { # read/write attribute-method.  returns/expects a scalar
-  my $this = shift;
-  $this->{'name'} = $_[0] if @_;
-  return $this->{'name'};
-}
-
-
-# -----------------------------------------------
-
-sub attributes { # read/write attribute-method
-  # expects a ref, presumably a hashref
-  my $this = shift;
-  if(@_) {
-    die "my parameter must be a reference" unless ref($_[0]);
-    $this->{'attributes'} = $_[0];
-  }
-  return $this->{'attributes'};
-}
-
-# -----------------------------------------------
-
-sub attribute { # alias
-  my($it,@them) = @_;  $it->attributes(@them);
-}
-
-# -----------------------------------------------
-
-sub is_node { return 1; } # always true.
-# NEVER override this with anything that returns false in the belief
-#  that this'd signal "not a node class".  The existence of this method
-#  is what I test for, with the various "can()" uses in this class.
-
-# -----------------------------------------------
-
-sub ancestors {
-  my $this = shift;
-  my $mama = $this->{'mother'}; # initial condition
-  return () unless ref($mama); # I must be root!
-
-  # Could be defined recursively, as:
-  # if(ref($mama = $this->{'mother'})){
-  #   return($mama, $mama->ancestors);
-  # } else {
-  #   return ();
-  # }
-  # But I didn't think of that until I coded the stuff below, which is
-  # faster.
-
-  my @ancestors = ( $mama ); # start off with my mama
-  while(defined( $mama = $mama->{'mother'} ) && ref($mama)) {
-    # Walk up the tree
-    push(@ancestors, $mama);
-    # This turns into an infinite loop if someone gets stupid
-    #  and makes this tree cyclic!  Don't do it!
-  }
-  return @ancestors;
-}
-
-# -----------------------------------------------
-
-sub root {
-  my $it = $_[0];
-  my @ancestors = ($it, $it->ancestors);
-  return $ancestors[-1];
-}
-
-# -----------------------------------------------
-
-sub is_daughter_of {
-  my($it,$mama) = @_[0,1];
-  return $it->{'mother'} eq $mama;
-}
-
-# -----------------------------------------------
-
-sub self_and_descendants {
-  # read-only method:  return a list of myself and any/all descendants
-  my $node = shift;
-  my @List = ();
-  $node->walk_down({ 'callback' => sub { push @List, $_[0]; return 1;}});
-  die "Spork Error 919: \@List has no contents!?!?" unless @List;
-    # impossible
-  return @List;
-}
-
-# -----------------------------------------------
-
-sub descendants {
-  # read-only method:  return a list of my descendants
-  my $node = shift;
-  my @list = $node->self_and_descendants;
-  shift @list; # lose myself.
-  return @list;
-}
-
-# -----------------------------------------------
-
-sub leaves_under {
-  # read-only method:  return a list of all leaves under myself.
-  # Returns myself in the degenerate case of being a leaf myself.
-  my $node = shift;
-  my @List = ();
-  $node->walk_down({ 'callback' =>
-    sub {
-      my $node = $_[0];
-      my @daughters = @{$node->{'daughters'}};
-      push(@List, $node) unless @daughters;
-      return 1;
-    }
-  });
-  die "Spork Error 861: \@List has no contents!?!?" unless @List;
-    # impossible
-  return @List;
-}
-
-# -----------------------------------------------
-
-sub depth_under {
-  my $node = shift;
-  my $max_depth = 0;
-  $node->walk_down({
-    '_depth' => 0,
-    'callback' => sub {
-      my $depth = $_[1]->{'_depth'};
-      $max_depth = $depth if $depth > $max_depth;
-      return 1;
-    },
-  });
-  return $max_depth;
-}
-
-# -----------------------------------------------
-
-sub generation {
-  my($node, $limit) = @_[0,1];
-  return $node
-    if $node eq $limit || not(
-			      defined($node->{'mother'}) &&
-			      ref($node->{'mother'})
-			     ); # bailout
-
-  return map(@{$_->{'daughters'}}, $node->{'mother'}->generation($limit));
-    # recurse!
-    # Yup, my generation is just all the daughters of my mom's generation.
-}
-
-# -----------------------------------------------
-
-sub generation_under {
-  my($node, @rest) = @_;
-  return $node->generation(@rest);
-}
-
-# -----------------------------------------------
-
-sub self_and_sisters {
-  my $node = $_[0];
-  my $mother = $node->{'mother'};
-  return $node unless defined($mother) && ref($mother);  # special case
-  return @{$node->{'mother'}->{'daughters'}};
-}
-
-# -----------------------------------------------
-
-sub sisters {
-  my $node = $_[0];
-  my $mother = $node->{'mother'};
-  return() unless $mother;  # special case
-  return grep($_ ne $node,
-              @{$node->{'mother'}->{'daughters'}}
-             );
-}
-
-# -----------------------------------------------
-
-sub left_sister {
-  my $it = $_[0];
-  my $mother = $it->{'mother'};
-  return undef unless $mother;
-  my @sisters = @{$mother->{'daughters'}};
-
-  return undef if @sisters  == 1; # I'm an only daughter
-
-  my $left = undef;
-  foreach my $one (@sisters) {
-    return $left if $one eq $it;
-    $left = $one;
-  }
-  die "SPORK ERROR 9757: I'm not in my mother's daughter list!?!?";
-}
-
-# -----------------------------------------------
-
-sub left_sisters {
-  my $it = $_[0];
-  my $mother = $it->{'mother'};
-  return() unless $mother;
-  my @sisters = @{$mother->{'daughters'}};
-  return() if @sisters  == 1; # I'm an only daughter
-
-  my @out = ();
-  foreach my $one (@sisters) {
-    return @out if $one eq $it;
-    push @out, $one;
-  }
-  die "SPORK ERROR 9767: I'm not in my mother's daughter list!?!?";
-}
-
-sub right_sister {
-  my $it = $_[0];
-  my $mother = $it->{'mother'};
-  return undef unless $mother;
-  my @sisters = @{$mother->{'daughters'}};
-  return undef if @sisters  == 1; # I'm an only daughter
-
-  my $seen = 0;
-  foreach my $one (@sisters) {
-    return $one if $seen;
-    $seen = 1 if $one eq $it;
-  }
-  die "SPORK ERROR 9777: I'm not in my mother's daughter list!?!?"
-    unless $seen;
-  return undef;
-}
-
-sub right_sisters {
-  my $it = $_[0];
-  my $mother = $it->{'mother'};
-  return() unless $mother;
-  my @sisters = @{$mother->{'daughters'}};
-  return() if @sisters  == 1; # I'm an only daughter
-
-  my @out;
-  my $seen = 0;
-  foreach my $one (@sisters) {
-    push @out, $one if $seen;
-    $seen = 1 if $one eq $it;
-  }
-  die "SPORK ERROR 9787: I'm not in my mother's daughter list!?!?"
-    unless $seen;
-  return @out;
-}
-
-sub my_daughter_index {
-  # returns what number is my index in my mother's daughter list
-  # special case: 0 for root.
-  my $node = $_[0];
-  my $ord = -1;
-  my $mother = $node->{'mother'};
-
-  return 0 unless $mother;
-  my @sisters = @{$mother->{'daughters'}};
-
-  die "SPORK ERROR 6512:  My mother has no kids!!!" unless @sisters;
-
- Find_Self:
-  for(my $i = 0; $i < @sisters; $i++) {
-    if($sisters[$i] eq $node) {
-      $ord = $i;
-      last Find_Self;
-    }
-  }
-  die "SPORK ERROR 2837: I'm not a daughter of my mother?!?!" if $ord == -1;
-  return $ord;
-}
 
 sub address {
   my($it, $address) = @_[0,1];
@@ -785,6 +162,69 @@ sub address {
   }
 }
 
+# -----------------------------------------------
+
+sub ancestors {
+  my $this = shift;
+  my $mama = $this->{'mother'}; # initial condition
+  return () unless ref($mama); # I must be root!
+
+  # Could be defined recursively, as:
+  # if(ref($mama = $this->{'mother'})){
+  #   return($mama, $mama->ancestors);
+  # } else {
+  #   return ();
+  # }
+  # But I didn't think of that until I coded the stuff below, which is
+  # faster.
+
+  my @ancestors = ( $mama ); # start off with my mama
+  while(defined( $mama = $mama->{'mother'} ) && ref($mama)) {
+    # Walk up the tree
+    push(@ancestors, $mama);
+    # This turns into an infinite loop if someone gets stupid
+    #  and makes this tree cyclic!  Don't do it!
+  }
+  return @ancestors;
+}
+
+# -----------------------------------------------
+
+sub attribute { # alias
+  my($it,@them) = @_;  $it->attributes(@them);
+}
+
+# -----------------------------------------------
+
+sub attributes { # read/write attribute-method
+  # expects a ref, presumably a hashref
+  my $this = shift;
+  if(@_) {
+    die "my parameter must be a reference" unless ref($_[0]);
+    $this->{'attributes'} = $_[0];
+  }
+  return $this->{'attributes'};
+}
+
+# -----------------------------------------------
+
+sub clear_daughters { # write-only method
+  my($mother) = $_[0];
+  my @daughters = @{$mother->{'daughters'}};
+
+  @{$mother->{'daughters'}} = ();
+  foreach my $one (@daughters) {
+    next unless UNIVERSAL::can($one, 'is_node'); # sanity check
+    $one->{'mother'} = undef;
+  }
+  # Another, simpler, way to do it:
+  #  $mother->remove_daughters($mother->daughters);
+
+  return @daughters; # NEW
+}
+
+# -----------------------------------------------
+
 sub common { # Return the lowest node common to all these nodes...
   # Called as $it->common($other) or $it->common(@others)
   my @ones = @_; # all nodes I was given
@@ -817,6 +257,7 @@ sub common { # Return the lowest node common to all these nodes...
   return $first;
 }
 
+# -----------------------------------------------
 
 sub common_ancestor {
   my @ones = @_; # all nodes I was given
@@ -838,340 +279,124 @@ sub common_ancestor {
   }
 }
 
-sub walk_down {
+# -----------------------------------------------
+
+sub copy {
+  my($from,$o) = @_[0,1];
+  $o = {} unless ref $o;
+
+  # Straight dupe, and bless into same class:
+  my $to = bless { %$from }, ref($from);
+
+  # Null out linkages.
+  $to->_init_mother;
+  $to->_init_daughters;
+
+  # dupe the 'attributes' attribute:
+  unless($o->{'no_attribute_copy'}) {
+    my $attrib_copy = ref($to->{'attributes'});
+    if($attrib_copy) {
+      if($attrib_copy eq 'HASH') {
+        $to->{'attributes'} = { %{$to->{'attributes'}} };
+        # dupe the hashref
+      } elsif ($attrib_copy = UNIVERSAL::can($to->{'attributes'}, 'copy') ) {
+        # $attrib_copy now points to the copier method
+        $to->{'attributes'} = &{$attrib_copy}($from);
+      } # otherwise I don't know how to copy it; leave as is
+    }
+  }
+  $o->{'from_to'}->{$from} = $to; # SECRET VOODOO
+    # ...autovivifies an anon hashref for 'from_to' if need be
+    # This is here in case I later want/need a table corresponding
+    # old nodes to new.
+  return $to;
+}
+
+# -----------------------------------------------
+
+sub copy_at_and_under {
+  my($from, $o) = @_[0,1];
+  $o = {} unless ref $o;
+  my @daughters = map($_->copy_at_and_under($o), @{$from->{'daughters'}});
+  my $to = $from->copy($o);
+  $to->set_daughters(@daughters) if @daughters;
+  return $to;
+}
+
+# -----------------------------------------------
+
+sub copy_tree {
   my($this, $o) = @_[0,1];
+  my $root = $this->root;
+  $o = {} unless ref $o;
 
-  # All the can()s are in case an object changes class while I'm
-  # looking at it.
+  my $new_root = $root->copy_at_and_under($o);
 
-  die "I need options!" unless ref($o);
-  die "I need a callback or a callbackback" unless
-    ( ref($o->{'callback'}) || ref($o->{'callbackback'}) );
+  return $new_root;
+}
 
-  my $callback = ref($o->{'callback'}) ? $o->{'callback'} : undef;
-  my $callbackback = ref($o->{'callbackback'}) ? $o->{'callbackback'} : undef;
-  my $callback_status = 1;
+# -----------------------------------------------
 
-  print "Callback: $callback   Callbackback: $callbackback\n" if $Debug;
+sub daughters { # read-only attrib-method: returns a list.
+  my $this = shift;
 
-  printf "* Entering %s\n", ($this->name || $this) if $Debug;
-  $callback_status = &{ $callback }( $this, $o ) if $callback;
-
-  if($callback_status) {
-    # Keep recursing unless callback returned false... and if there's
-    # anything to recurse into, of course.
-    my @daughters = UNIVERSAL::can($this, 'is_node') ? @{$this->{'daughters'}} : ();
-    if(@daughters) {
-      $o->{'_depth'} += 1;
-      #print "Depth " , $o->{'_depth'}, "\n";
-      foreach my $one (@daughters) {
-        $one->walk_down($o) if UNIVERSAL::can($one, 'is_node');
-        # and if it can do "is_node", it should provide a walk_down!
-      }
-      $o->{'_depth'} -= 1;
-    }
-  } else {
-    printf "* Recursing below %s pruned\n", ($this->name || $this) if $Debug;
+  if(@_) { # undoc'd and disfavored to use as a write-method
+    die "Don't set daughters with daughters anymore\n";
+    warn "my parameter must be a listref" unless ref($_[0]);
+    $this->{'daughters'} = $_[0];
+    $this->_update_daughter_links;
   }
+  #return $this->{'daughters'};
+  return @{$this->{'daughters'} || []};
+}
 
-  # Note that $callback_status doesn't block callbackback from being called
-  if($callbackback){
-    if(UNIVERSAL::can($this, 'is_node')) { # if it's still a node!
-      print "* Calling callbackback\n" if $Debug;
-      scalar( &{ $callbackback }( $this, $o ) );
-      # scalar to give it the same context as callback
-    } else {
-      print "* Can't call callbackback -- $this isn't a node anymore\n"
-        if $Debug;
-    }
-  }
-  if($Debug) {
-    if(UNIVERSAL::can($this, 'is_node')) { # if it's still a node!
-      printf "* Leaving %s\n", ($this->name || $this)
-    } else {
-      print "* Leaving [no longer a node]\n";
-    }
-  }
+# -----------------------------------------------
+
+sub delete_tree {
+  my $it = $_[0];
+  $it->root->walk_down({ # has to be callbackback, not callback
+    'callbackback' => sub {
+       %{$_[0]} = ();
+       bless($_[0], 'DEADNODE'); # cause become dead!  cause become dead!
+       return 1;
+     }
+  });
   return;
+  # Why DEADNODE?  Because of the nice error message:
+  #  "Can't locate object method "leaves_under" via package "DEADNODE"."
+  # Moreover, DEADNODE doesn't provide is_node, so fails my can() tests.
 }
 
-sub dump_names {
-  my($it, $o) = @_[0,1];
-  $o = {} unless ref $o;
-  my @out = ();
-  $o->{'_depth'} ||= 0;
-  $o->{'indent'} ||= '  ';
-  $o->{'tick'} ||= '';
+sub DEADNODE::delete_tree { return; }
+  # in case you kill it AGAIN!!!!!  AND AGAIN AND AGAIN!!!!!! OO-HAHAHAHA!
 
-  $o->{'callback'} = sub {
-      my($this, $o) = @_[0,1];
-      push(@out,
-        join('',
-             $o->{'indent'} x $o->{'_depth'},
-             $o->{'tick'},
-             &Tree::DAG_Node::_dump_quote(defined $this->name ? $this->name : $this),
-             "\n"
-        )
-      );
+# -----------------------------------------------
+
+sub depth_under {
+  my $node = shift;
+  my $max_depth = 0;
+  $node->walk_down({
+    '_depth' => 0,
+    'callback' => sub {
+      my $depth = $_[1]->{'_depth'};
+      $max_depth = $depth if $depth > $max_depth;
       return 1;
-    }
-  ;
-  $it->walk_down($o);
-  return @out;
+    },
+  });
+  return $max_depth;
 }
 
-sub random_network { # constructor or method.
-  my $class = $_[0];
-  my $o = ref($_[1]) ? $_[1] : {};
-  my $am_cons = 0;
-  my $root;
+# -----------------------------------------------
 
-  if(ref($class)){ # I'm a method.
-    $root = $_[0]; # build under the given node, from same class.
-    $class = ref $class;
-    $am_cons = 0;
-  } else { # I'm a constructor
-    $root = $class->new; # build under a new node, with class named.
-    $root->name("Root");
-    $am_cons = 1;
-  }
-
-  my $min_depth = $o->{'min_depth'} || 2;
-  my $max_depth = $o->{'max_depth'} || ($min_depth + 3);
-  my $max_children = $o->{'max_children'} || 4;
-  my $max_node_count = $o->{'max_node_count'} || 25;
-
-  die "max_children has to be positive" if int($max_children) < 1;
-
-  my @mothers = ( $root );
-  my @children = ( );
-  my $node_count = 1; # the root
-
- Gen:
-  foreach my $depth (1 .. $max_depth) {
-    last if $node_count > $max_node_count;
-   Mother:
-    foreach my $mother (@mothers) {
-      last Gen if $node_count > $max_node_count;
-      my $children_number;
-      if($depth <= $min_depth) {
-        until( $children_number = int(rand(1 + $max_children)) ) {}
-      } else {
-        $children_number = int(rand($max_children));
-      }
-     Beget:
-      foreach (1 .. $children_number) {
-        last Gen if $node_count > $max_node_count;
-        my $node = $mother->new_daughter;
-        $node->name("Node$node_count");
-        ++$node_count;
-        push(@children, $node);
-      }
-    }
-    @mothers = @children;
-    @children = ();
-    last unless @mothers;
-  }
-
-  return $root;
+sub descendants {
+  # read-only method:  return a list of my descendants
+  my $node = shift;
+  my @list = $node->self_and_descendants;
+  shift @list; # lose myself.
+  return @list;
 }
 
-sub lol_to_tree {
-  my($class, $lol, $seen_r) = @_[0,1,2];
-  $seen_r = {} unless ref($seen_r) eq 'HASH';
-  return if ref($lol) && $seen_r->{$lol}++; # catch circularity
-
-  $class = ref($class) || $class;
-  my $node = $class->new();
-
-  unless(ref($lol) eq 'ARRAY') {  # It's a terminal node.
-    $node->name($lol) if defined $lol;
-    return $node;
-  }
-  return $node unless @$lol;  # It's a terminal node, oddly represented
-
-  #  It's a non-terminal node.
-
-  my @options = @$lol;
-  unless(ref($options[-1]) eq 'ARRAY') {
-    # This is what separates this method from simple_lol_to_tree
-    $node->name(pop(@options));
-  }
-
-  foreach my $d (@options) {  # Scan daughters (whether scalars or listrefs)
-    $node->add_daughter( $class->lol_to_tree($d, $seen_r) );  # recurse!
-  }
-
-  return $node;
-}
-
-sub tree_to_lol_notation {
-  my $root = $_[0];
-  my($it, $o) = @_[0,1];
-  $o = {} unless ref $o;
-  my @out = ();
-  $o->{'_depth'} ||= 0;
-  $o->{'multiline'} = 0 unless exists($o->{'multiline'});
-
-  my $line_end;
-  if($o->{'multiline'}) {
-    $o->{'indent'} ||= '  ';
-    $line_end = "\n";
-  } else {
-    $o->{'indent'} ||= '';
-    $line_end = '';
-  }
-
-  $o->{'callback'} = sub {
-      my($this, $o) = @_[0,1];
-      push(@out,
-             $o->{'indent'} x $o->{'_depth'},
-             "[$line_end",
-      );
-      return 1;
-    }
-  ;
-  $o->{'callbackback'} = sub {
-      my($this, $o) = @_[0,1];
-      my $name = defined $this->name ? &Tree::DAG_Node::_dump_quote($this->name) : 'undef';
-      push(@out,
-             $o->{'indent'} x ($o->{'_depth'} + 1),
-             "$name$line_end",
-             $o->{'indent'} x $o->{'_depth'},
-             "], $line_end",
-      );
-      return 1;
-    }
-  ;
-  $it->walk_down($o);
-  return join('', @out);
-}
-
-sub tree_to_lol {
-  # I haven't /rigorously/ tested this.
-  my($it, $o) = @_[0,1]; # $o is currently unused anyway
-  $o = {} unless ref $o;
-
-  my $out = [];
-  my @lol_stack = ($out);
-  $o->{'callback'} = sub {
-      my($this, $o) = @_[0,1];
-      my $new = [];
-      push @{$lol_stack[-1]}, $new;
-      push(@lol_stack, $new);
-      return 1;
-    }
-  ;
-  $o->{'callbackback'} = sub {
-      my($this, $o) = @_[0,1];
-      push @{$lol_stack[-1]}, $this->name;
-      pop @lol_stack;
-      return 1;
-    }
-  ;
-  $it->walk_down($o);
-  die "totally bizarre error 12416" unless ref($out->[0]);
-  $out = $out->[0]; # the real root
-  return $out;
-}
-
-sub simple_lol_to_tree {
-  my($class, $lol, $seen_r) = @_[0,1,2];
-  $class = ref($class) || $class;
-  $seen_r = {} unless ref($seen_r) eq 'HASH';
-  return if ref($lol) && $seen_r->{$lol}++; # catch circularity
-
-  my $node = $class->new();
-
-  unless(ref($lol) eq 'ARRAY') {  # It's a terminal node.
-    $node->name($lol) if defined $lol;
-    return $node;
-  }
-
-  #  It's a non-terminal node.
-  foreach my $d (@$lol) { # scan daughters (whether scalars or listrefs)
-    $node->add_daughter( $class->simple_lol_to_tree($d, $seen_r) );  # recurse!
-  }
-
-  return $node;
-}
-
-sub tree_to_simple_lol {
-  # I haven't /rigorously/ tested this.
-  my $root = $_[0];
-
-  return $root->name unless scalar($root->daughters);
-   # special case we have to nip in the bud
-
-  my($it, $o) = @_[0,1]; # $o is currently unused anyway
-  $o = {} unless ref $o;
-
-  my $out = [];
-  my @lol_stack = ($out);
-  $o->{'callback'} = sub {
-      my($this, $o) = @_[0,1];
-      my $new;
-      $new = scalar($this->daughters) ? [] : $this->name;
-        # Terminal nodes are scalars, the rest are listrefs we'll fill in
-        # as we recurse the tree below here.
-      push @{$lol_stack[-1]}, $new;
-      push(@lol_stack, $new);
-      return 1;
-    }
-  ;
-  $o->{'callbackback'} = sub { pop @lol_stack; return 1; };
-  $it->walk_down($o);
-  die "totally bizarre error 12416" unless ref($out->[0]);
-  $out = $out->[0]; # the real root
-  return $out;
-}
-
-sub tree_to_simple_lol_notation {
-  my($it, $o) = @_[0,1];
-  $o = {} unless ref $o;
-  my @out = ();
-  $o->{'_depth'} ||= 0;
-  $o->{'multiline'} = 0 unless exists($o->{'multiline'});
-
-  my $line_end;
-  if($o->{'multiline'}) {
-    $o->{'indent'} ||= '  ';
-    $line_end = "\n";
-  } else {
-    $o->{'indent'} ||= '';
-    $line_end = '';
-  }
-
-  $o->{'callback'} = sub {
-      my($this, $o) = @_[0,1];
-      if(scalar($this->daughters)) {   # Nonterminal
-        push(@out,
-               $o->{'indent'} x $o->{'_depth'},
-               "[$line_end",
-        );
-      } else {   # Terminal
-        my $name = $this->name;
-        push @out,
-          $o->{'indent'} x $o->{'_depth'},
-          defined($name) ? &Tree::DAG_Node::_dump_quote($name) : 'undef',
-          ",$line_end";
-      }
-      return 1;
-    }
-  ;
-  $o->{'callbackback'} = sub {
-      my($this, $o) = @_[0,1];
-      push(@out,
-             $o->{'indent'} x $o->{'_depth'},
-             "], $line_end",
-      ) if scalar($this->daughters);
-      return 1;
-    }
-  ;
-
-  $it->walk_down($o);
-  return join('', @out);
-}
+# -----------------------------------------------
 
 sub draw_ascii_tree {
   # Make a "box" for this node and its possible daughters, recursively.
@@ -1369,77 +594,34 @@ sub draw_ascii_tree {
   return \@box; # must not return a null list!
 }
 
-sub copy_tree {
-  my($this, $o) = @_[0,1];
-  my $root = $this->root;
+# -----------------------------------------------
+
+sub dump_names {
+  my($it, $o) = @_[0,1];
   $o = {} unless ref $o;
+  my @out = ();
+  $o->{'_depth'} ||= 0;
+  $o->{'indent'} ||= '  ';
+  $o->{'tick'} ||= '';
 
-  my $new_root = $root->copy_at_and_under($o);
-
-  return $new_root;
-}
-
-sub copy_at_and_under {
-  my($from, $o) = @_[0,1];
-  $o = {} unless ref $o;
-  my @daughters = map($_->copy_at_and_under($o), @{$from->{'daughters'}});
-  my $to = $from->copy($o);
-  $to->set_daughters(@daughters) if @daughters;
-  return $to;
-}
-
-sub copy {
-  my($from,$o) = @_[0,1];
-  $o = {} unless ref $o;
-
-  # Straight dupe, and bless into same class:
-  my $to = bless { %$from }, ref($from);
-
-  # Null out linkages.
-  $to->_init_mother;
-  $to->_init_daughters;
-
-  # dupe the 'attributes' attribute:
-  unless($o->{'no_attribute_copy'}) {
-    my $attrib_copy = ref($to->{'attributes'});
-    if($attrib_copy) {
-      if($attrib_copy eq 'HASH') {
-        $to->{'attributes'} = { %{$to->{'attributes'}} };
-        # dupe the hashref
-      } elsif ($attrib_copy = UNIVERSAL::can($to->{'attributes'}, 'copy') ) {
-        # $attrib_copy now points to the copier method
-        $to->{'attributes'} = &{$attrib_copy}($from);
-      } # otherwise I don't know how to copy it; leave as is
+  $o->{'callback'} = sub {
+      my($this, $o) = @_[0,1];
+      push(@out,
+        join('',
+             $o->{'indent'} x $o->{'_depth'},
+             $o->{'tick'},
+             &Tree::DAG_Node::_dump_quote(defined $this->name ? $this->name : $this),
+             "\n"
+        )
+      );
+      return 1;
     }
-  }
-  $o->{'from_to'}->{$from} = $to; # SECRET VOODOO
-    # ...autovivifies an anon hashref for 'from_to' if need be
-    # This is here in case I later want/need a table corresponding
-    # old nodes to new.
-  return $to;
+  ;
+  $it->walk_down($o);
+  return @out;
 }
 
-
-sub delete_tree {
-  my $it = $_[0];
-  $it->root->walk_down({ # has to be callbackback, not callback
-    'callbackback' => sub {
-       %{$_[0]} = ();
-       bless($_[0], 'DEADNODE'); # cause become dead!  cause become dead!
-       return 1;
-     }
-  });
-  return;
-  # Why DEADNODE?  Because of the nice error message:
-  #  "Can't locate object method "leaves_under" via package "DEADNODE"."
-  # Moreover, DEADNODE doesn't provide is_node, so fails my can() tests.
-}
-
-sub DEADNODE::delete_tree { return; }
-  # in case you kill it AGAIN!!!!!  AND AGAIN AND AGAIN!!!!!! OO-HAHAHAHA!
-
-###########################################################################
-# stolen from MIDI.pm
+# -----------------------------------------------
 
 sub _dump_quote {
   my @stuff = @_;
@@ -1464,5 +646,861 @@ sub _dump_quote {
      @stuff
     );
 }
+
+# -----------------------------------------------
+
+sub format_node
+{
+	my($self, $options, $node) = @_;
+	my($s) = $node -> name;
+	$s     .= '. Attributes: ' . $self -> hashref2string($node -> attributes) if (! defined $$options{no_attributes});
+
+	return $s;
+
+} # End of format_node.
+
+# -----------------------------------------------
+
+sub generation {
+  my($node, $limit) = @_[0,1];
+  return $node
+    if $node eq $limit || not(
+			      defined($node->{'mother'}) &&
+			      ref($node->{'mother'})
+			     ); # bailout
+
+  return map(@{$_->{'daughters'}}, $node->{'mother'}->generation($limit));
+    # recurse!
+    # Yup, my generation is just all the daughters of my mom's generation.
+}
+
+# -----------------------------------------------
+
+sub generation_under {
+  my($node, @rest) = @_;
+  return $node->generation(@rest);
+}
+
+# -----------------------------------------------
+
+sub hashref2string
+{
+	my($self, $hashref) = @_;
+	$hashref ||= {};
+
+	return '{' . join(', ', map{qq|$_ => "$$hashref{$_}"|} sort keys %$hashref) . '}';
+
+} # End of hashref2string.
+
+# -----------------------------------------------
+
+sub _init { # method
+  my $this = shift;
+  my $o = ref($_[0]) eq 'HASH' ? $_[0] : {};
+
+  # Sane initialization.
+  $this->_init_mother($o);
+  $this->_init_daughters($o);
+  $this->_init_name($o);
+  $this->_init_attributes($o);
+
+  return;
+}
+
+# -----------------------------------------------
+
+sub _init_attributes { # to be called by an _init
+  my($this, $o) = @_[0,1];
+
+  $this->{'attributes'} = {};
+
+  # Undocumented and disfavored.  Consider this just an example.
+  $this->attributes( $o->{'attributes'} ) if exists $o->{'attributes'};
+}
+
+# -----------------------------------------------
+
+sub _init_daughters { # to be called by an _init
+  my($this, $o) = @_[0,1];
+
+  $this->{'daughters'} = [];
+
+  # Undocumented and disfavored.  Consider this just an example.
+  $this->set_daughters( @{$o->{'daughters'}} )
+    if ref($o->{'daughters'}) && (@{$o->{'daughters'}});
+  # DO NOT use this option (as implemented) with new_daughter or
+  #  new_daughter_left!!!!!
+  # BAD THINGS MAY HAPPEN!!!
+}
+
+# -----------------------------------------------
+
+sub _init_mother { # to be called by an _init
+  my($this, $o) = @_[0,1];
+
+  $this->{'mother'} = undef;
+
+  # Undocumented and disfavored.  Consider this just an example.
+  ( $o->{'mother'} )->add_daughter($this)
+    if defined($o->{'mother'}) && ref($o->{'mother'});
+  # DO NOT use this option (as implemented) with new_daughter or
+  #  new_daughter_left!!!!!
+  # BAD THINGS MAY HAPPEN!!!
+}
+
+# -----------------------------------------------
+
+sub _init_name { # to be called by an _init
+  my($this, $o) = @_[0,1];
+
+  $this->{'name'} = undef;
+
+  # Undocumented and disfavored.  Consider this just an example.
+  $this->name( $o->{'name'} ) if exists $o->{'name'};
+}
+
+# -----------------------------------------------
+
+sub is_daughter_of {
+  my($it,$mama) = @_[0,1];
+  return $it->{'mother'} eq $mama;
+}
+
+# -----------------------------------------------
+
+sub is_node { return 1; } # always true.
+# NEVER override this with anything that returns false in the belief
+#  that this'd signal "not a node class".  The existence of this method
+#  is what I test for, with the various "can()" uses in this class.
+
+# -----------------------------------------------
+
+sub is_root
+{
+	my($self) = @_;
+
+	return defined $self -> mother ? 0 : 1;
+
+} # End of is_root.
+
+# -----------------------------------------------
+
+sub leaves_under {
+  # read-only method:  return a list of all leaves under myself.
+  # Returns myself in the degenerate case of being a leaf myself.
+  my $node = shift;
+  my @List = ();
+  $node->walk_down({ 'callback' =>
+    sub {
+      my $node = $_[0];
+      my @daughters = @{$node->{'daughters'}};
+      push(@List, $node) unless @daughters;
+      return 1;
+    }
+  });
+  die "Spork Error 861: \@List has no contents!?!?" unless @List;
+    # impossible
+  return @List;
+}
+
+# -----------------------------------------------
+
+sub left_sister {
+  my $it = $_[0];
+  my $mother = $it->{'mother'};
+  return undef unless $mother;
+  my @sisters = @{$mother->{'daughters'}};
+
+  return undef if @sisters  == 1; # I'm an only daughter
+
+  my $left = undef;
+  foreach my $one (@sisters) {
+    return $left if $one eq $it;
+    $left = $one;
+  }
+  die "SPORK ERROR 9757: I'm not in my mother's daughter list!?!?";
+}
+
+# -----------------------------------------------
+
+sub left_sisters {
+  my $it = $_[0];
+  my $mother = $it->{'mother'};
+  return() unless $mother;
+  my @sisters = @{$mother->{'daughters'}};
+  return() if @sisters  == 1; # I'm an only daughter
+
+  my @out = ();
+  foreach my $one (@sisters) {
+    return @out if $one eq $it;
+    push @out, $one;
+  }
+  die "SPORK ERROR 9767: I'm not in my mother's daughter list!?!?";
+}
+
+# -----------------------------------------------
+
+sub lol_to_tree {
+  my($class, $lol, $seen_r) = @_[0,1,2];
+  $seen_r = {} unless ref($seen_r) eq 'HASH';
+  return if ref($lol) && $seen_r->{$lol}++; # catch circularity
+
+  $class = ref($class) || $class;
+  my $node = $class->new();
+
+  unless(ref($lol) eq 'ARRAY') {  # It's a terminal node.
+    $node->name($lol) if defined $lol;
+    return $node;
+  }
+  return $node unless @$lol;  # It's a terminal node, oddly represented
+
+  #  It's a non-terminal node.
+
+  my @options = @$lol;
+  unless(ref($options[-1]) eq 'ARRAY') {
+    # This is what separates this method from simple_lol_to_tree
+    $node->name(pop(@options));
+  }
+
+  foreach my $d (@options) {  # Scan daughters (whether scalars or listrefs)
+    $node->add_daughter( $class->lol_to_tree($d, $seen_r) );  # recurse!
+  }
+
+  return $node;
+}
+
+# -----------------------------------------------
+
+sub mother { # read-only attrib-method: returns an object (the mother node)
+  my $this = shift;
+  die "I'm a read-only method!" if @_;
+  return $this->{'mother'};
+}
+
+# -----------------------------------------------
+
+sub my_daughter_index {
+  # returns what number is my index in my mother's daughter list
+  # special case: 0 for root.
+  my $node = $_[0];
+  my $ord = -1;
+  my $mother = $node->{'mother'};
+
+  return 0 unless $mother;
+  my @sisters = @{$mother->{'daughters'}};
+
+  die "SPORK ERROR 6512:  My mother has no kids!!!" unless @sisters;
+
+ Find_Self:
+  for(my $i = 0; $i < @sisters; $i++) {
+    if($sisters[$i] eq $node) {
+      $ord = $i;
+      last Find_Self;
+    }
+  }
+  die "SPORK ERROR 2837: I'm not a daughter of my mother?!?!" if $ord == -1;
+  return $ord;
+}
+
+# -----------------------------------------------
+
+sub name { # read/write attribute-method.  returns/expects a scalar
+  my $this = shift;
+  $this->{'name'} = $_[0] if @_;
+  return $this->{'name'};
+}
+
+# -----------------------------------------------
+
+sub new { # constructor
+  my $class = shift;
+  $class = ref($class) if ref($class); # tchristic style.  why not?
+
+  my $o = ref($_[0]) eq 'HASH' ? $_[0] : {}; # o for options hashref
+  my $it = bless( {}, $class );
+  print "Constructing $it in class $class\n" if $Debug;
+  $it->_init( $o );
+  return $it;
+}
+
+# -----------------------------------------------
+
+sub new_daughter {
+  my($mother, @options) = @_;
+  my $daughter = $mother->new(@options);
+
+  push @{$mother->{'daughters'}}, $daughter;
+  $daughter->{'mother'} = $mother;
+
+  return $daughter;
+}
+
+# -----------------------------------------------
+
+sub new_daughter_left {
+  my($mother, @options) = @_;
+  my $daughter = $mother->new(@options);
+
+  unshift @{$mother->{'daughters'}}, $daughter;
+  $daughter->{'mother'} = $mother;
+
+  return $daughter;
+}
+
+# -----------------------------------------------
+
+sub node2string
+{
+	my($self, $options, $t, $vert_dashes) = @_;
+	my($depth)         = scalar($t -> ancestors) || 0;
+	my($sibling_count) = defined $t -> mother ? scalar $t -> self_and_sisters : 1;
+	my($offset)        = ' ' x 4;
+	my(@indent)        = map{$$vert_dashes[$_] || $offset} 0 .. $depth - 1;
+	@$vert_dashes      =
+	(
+		@indent,
+		($sibling_count == 1 ? $offset : '   |'),
+	);
+
+	if ($sibling_count == ($t -> my_daughter_index + 1) )
+	{
+		$$vert_dashes[$depth] = $offset;
+	}
+
+	return join('' => @indent[1 .. $#indent]) . ($depth ? '   |---' : '') . $self -> format_node($options, $t);
+
+} # End of node2string.
+
+# -----------------------------------------------
+
+sub random_network { # constructor or method.
+  my $class = $_[0];
+  my $o = ref($_[1]) ? $_[1] : {};
+  my $am_cons = 0;
+  my $root;
+
+  if(ref($class)){ # I'm a method.
+    $root = $_[0]; # build under the given node, from same class.
+    $class = ref $class;
+    $am_cons = 0;
+  } else { # I'm a constructor
+    $root = $class->new; # build under a new node, with class named.
+    $root->name("Root");
+    $am_cons = 1;
+  }
+
+  my $min_depth = $o->{'min_depth'} || 2;
+  my $max_depth = $o->{'max_depth'} || ($min_depth + 3);
+  my $max_children = $o->{'max_children'} || 4;
+  my $max_node_count = $o->{'max_node_count'} || 25;
+
+  die "max_children has to be positive" if int($max_children) < 1;
+
+  my @mothers = ( $root );
+  my @children = ( );
+  my $node_count = 1; # the root
+
+ Gen:
+  foreach my $depth (1 .. $max_depth) {
+    last if $node_count > $max_node_count;
+   Mother:
+    foreach my $mother (@mothers) {
+      last Gen if $node_count > $max_node_count;
+      my $children_number;
+      if($depth <= $min_depth) {
+        until( $children_number = int(rand(1 + $max_children)) ) {}
+      } else {
+        $children_number = int(rand($max_children));
+      }
+     Beget:
+      foreach (1 .. $children_number) {
+        last Gen if $node_count > $max_node_count;
+        my $node = $mother->new_daughter;
+        $node->name("Node$node_count");
+        ++$node_count;
+        push(@children, $node);
+      }
+    }
+    @mothers = @children;
+    @children = ();
+    last unless @mothers;
+  }
+
+  return $root;
+}
+
+# -----------------------------------------------
+
+sub remove_daughters { # write-only method
+  my($mother, @daughters) = @_;
+  die "mother must be an object!" unless ref $mother;
+  return unless @daughters;
+
+  my %to_delete;
+  @daughters = grep {ref($_)
+		       and defined($_->{'mother'})
+		       and $mother eq $_->{'mother'}
+                    } @daughters;
+  return unless @daughters;
+  @to_delete{ @daughters } = undef;
+
+  # This could be done better and more efficiently, I guess.
+  foreach my $daughter (@daughters) {
+    $daughter->{'mother'} = undef;
+  }
+  my $them = $mother->{'daughters'};
+  @$them = grep { !exists($to_delete{$_}) } @$them;
+
+  # $mother->_update_daughter_links; # unnecessary
+  return;
+}
+
+# -----------------------------------------------
+
+sub remove_daughter { # alias
+  my($it,@them) = @_;  $it->remove_daughters(@them);
+}
+
+# -----------------------------------------------
+
+sub replace_with { # write-only method
+  my($this, @replacements) = @_;
+
+  if(not( defined($this->{'mother'}) && ref($this->{'mother'}) )) { # if root
+    foreach my $replacement (@replacements) {
+      $replacement->{'mother'}->remove_daughters($replacement)
+        if $replacement->{'mother'};
+    }
+      # make 'em roots
+  } else { # I have a mother
+    my $mother = $this->{'mother'};
+
+    #@replacements = grep(($_ eq $this  ||  $_->{'mother'} ne $mother),
+    #                     @replacements);
+    @replacements = grep { $_ eq $this
+                           || not(defined($_->{'mother'}) &&
+                                  ref($_->{'mother'}) &&
+                                  $_->{'mother'} eq $mother
+                                 )
+                         }
+                         @replacements;
+    # Eliminate sisters (but not self)
+    # i.e., I want myself or things NOT with the same mother as myself.
+
+    $mother->set_daughters(   # old switcheroo
+                           map($_ eq $this ? (@replacements) : $_ ,
+                               @{$mother->{'daughters'}}
+                              )
+                          );
+    # and set_daughters does all the checking and possible
+    # unlinking
+  }
+  return($this, @replacements);
+}
+
+# -----------------------------------------------
+
+sub replace_with_daughters { # write-only method
+  my($this) = $_[0]; # takes no params other than the self
+  my $mother = $this->{'mother'};
+  return($this, $this->clear_daughters)
+    unless defined($mother) && ref($mother);
+
+  my @daughters = $this->clear_daughters;
+  my $sib_r = $mother->{'daughters'};
+  @$sib_r = map($_ eq $this ? (@daughters) : $_,
+                @$sib_r   # old switcheroo
+            );
+  foreach my $daughter (@daughters) {
+    $daughter->{'mother'} = $mother;
+  }
+  return($this, @daughters);
+}
+
+# -----------------------------------------------
+
+sub right_sister {
+  my $it = $_[0];
+  my $mother = $it->{'mother'};
+  return undef unless $mother;
+  my @sisters = @{$mother->{'daughters'}};
+  return undef if @sisters  == 1; # I'm an only daughter
+
+  my $seen = 0;
+  foreach my $one (@sisters) {
+    return $one if $seen;
+    $seen = 1 if $one eq $it;
+  }
+  die "SPORK ERROR 9777: I'm not in my mother's daughter list!?!?"
+    unless $seen;
+  return undef;
+}
+
+# -----------------------------------------------
+
+sub right_sisters {
+  my $it = $_[0];
+  my $mother = $it->{'mother'};
+  return() unless $mother;
+  my @sisters = @{$mother->{'daughters'}};
+  return() if @sisters  == 1; # I'm an only daughter
+
+  my @out;
+  my $seen = 0;
+  foreach my $one (@sisters) {
+    push @out, $one if $seen;
+    $seen = 1 if $one eq $it;
+  }
+  die "SPORK ERROR 9787: I'm not in my mother's daughter list!?!?"
+    unless $seen;
+  return @out;
+}
+
+# -----------------------------------------------
+
+sub root {
+  my $it = $_[0];
+  my @ancestors = ($it, $it->ancestors);
+  return $ancestors[-1];
+}
+
+# -----------------------------------------------
+
+sub self_and_descendants {
+  # read-only method:  return a list of myself and any/all descendants
+  my $node = shift;
+  my @List = ();
+  $node->walk_down({ 'callback' => sub { push @List, $_[0]; return 1;}});
+  die "Spork Error 919: \@List has no contents!?!?" unless @List;
+    # impossible
+  return @List;
+}
+
+# -----------------------------------------------
+
+sub self_and_sisters {
+  my $node = $_[0];
+  my $mother = $node->{'mother'};
+  return $node unless defined($mother) && ref($mother);  # special case
+  return @{$node->{'mother'}->{'daughters'}};
+}
+
+# -----------------------------------------------
+
+sub set_daughters { # write-only method
+  my($mother, @them) = @_;
+  $mother->clear_daughters;
+  $mother->add_daughters(@them) if @them;
+  # yup, it's that simple
+}
+
+# -----------------------------------------------
+
+sub simple_lol_to_tree {
+  my($class, $lol, $seen_r) = @_[0,1,2];
+  $class = ref($class) || $class;
+  $seen_r = {} unless ref($seen_r) eq 'HASH';
+  return if ref($lol) && $seen_r->{$lol}++; # catch circularity
+
+  my $node = $class->new();
+
+  unless(ref($lol) eq 'ARRAY') {  # It's a terminal node.
+    $node->name($lol) if defined $lol;
+    return $node;
+  }
+
+  #  It's a non-terminal node.
+  foreach my $d (@$lol) { # scan daughters (whether scalars or listrefs)
+    $node->add_daughter( $class->simple_lol_to_tree($d, $seen_r) );  # recurse!
+  }
+
+  return $node;
+}
+
+# -----------------------------------------------
+
+sub sisters {
+  my $node = $_[0];
+  my $mother = $node->{'mother'};
+  return() unless $mother;  # special case
+  return grep($_ ne $node,
+              @{$node->{'mother'}->{'daughters'}}
+             );
+}
+
+# -----------------------------------------------
+
+sub tree_to_simple_lol {
+  # I haven't /rigorously/ tested this.
+  my $root = $_[0];
+
+  return $root->name unless scalar($root->daughters);
+   # special case we have to nip in the bud
+
+  my($it, $o) = @_[0,1]; # $o is currently unused anyway
+  $o = {} unless ref $o;
+
+  my $out = [];
+  my @lol_stack = ($out);
+  $o->{'callback'} = sub {
+      my($this, $o) = @_[0,1];
+      my $new;
+      $new = scalar($this->daughters) ? [] : $this->name;
+        # Terminal nodes are scalars, the rest are listrefs we'll fill in
+        # as we recurse the tree below here.
+      push @{$lol_stack[-1]}, $new;
+      push(@lol_stack, $new);
+      return 1;
+    }
+  ;
+  $o->{'callbackback'} = sub { pop @lol_stack; return 1; };
+  $it->walk_down($o);
+  die "totally bizarre error 12416" unless ref($out->[0]);
+  $out = $out->[0]; # the real root
+  return $out;
+}
+
+# -----------------------------------------------
+
+sub tree_to_simple_lol_notation {
+  my($it, $o) = @_[0,1];
+  $o = {} unless ref $o;
+  my @out = ();
+  $o->{'_depth'} ||= 0;
+  $o->{'multiline'} = 0 unless exists($o->{'multiline'});
+
+  my $line_end;
+  if($o->{'multiline'}) {
+    $o->{'indent'} ||= '  ';
+    $line_end = "\n";
+  } else {
+    $o->{'indent'} ||= '';
+    $line_end = '';
+  }
+
+  $o->{'callback'} = sub {
+      my($this, $o) = @_[0,1];
+      if(scalar($this->daughters)) {   # Nonterminal
+        push(@out,
+               $o->{'indent'} x $o->{'_depth'},
+               "[$line_end",
+        );
+      } else {   # Terminal
+        my $name = $this->name;
+        push @out,
+          $o->{'indent'} x $o->{'_depth'},
+          defined($name) ? &Tree::DAG_Node::_dump_quote($name) : 'undef',
+          ",$line_end";
+      }
+      return 1;
+    }
+  ;
+  $o->{'callbackback'} = sub {
+      my($this, $o) = @_[0,1];
+      push(@out,
+             $o->{'indent'} x $o->{'_depth'},
+             "], $line_end",
+      ) if scalar($this->daughters);
+      return 1;
+    }
+  ;
+
+  $it->walk_down($o);
+  return join('', @out);
+}
+
+# -----------------------------------------------
+
+sub tree_to_lol {
+  # I haven't /rigorously/ tested this.
+  my($it, $o) = @_[0,1]; # $o is currently unused anyway
+  $o = {} unless ref $o;
+
+  my $out = [];
+  my @lol_stack = ($out);
+  $o->{'callback'} = sub {
+      my($this, $o) = @_[0,1];
+      my $new = [];
+      push @{$lol_stack[-1]}, $new;
+      push(@lol_stack, $new);
+      return 1;
+    }
+  ;
+  $o->{'callbackback'} = sub {
+      my($this, $o) = @_[0,1];
+      push @{$lol_stack[-1]}, $this->name;
+      pop @lol_stack;
+      return 1;
+    }
+  ;
+  $it->walk_down($o);
+  die "totally bizarre error 12416" unless ref($out->[0]);
+  $out = $out->[0]; # the real root
+  return $out;
+}
+
+# -----------------------------------------------
+
+sub tree_to_lol_notation {
+  my $root = $_[0];
+  my($it, $o) = @_[0,1];
+  $o = {} unless ref $o;
+  my @out = ();
+  $o->{'_depth'} ||= 0;
+  $o->{'multiline'} = 0 unless exists($o->{'multiline'});
+
+  my $line_end;
+  if($o->{'multiline'}) {
+    $o->{'indent'} ||= '  ';
+    $line_end = "\n";
+  } else {
+    $o->{'indent'} ||= '';
+    $line_end = '';
+  }
+
+  $o->{'callback'} = sub {
+      my($this, $o) = @_[0,1];
+      push(@out,
+             $o->{'indent'} x $o->{'_depth'},
+             "[$line_end",
+      );
+      return 1;
+    }
+  ;
+  $o->{'callbackback'} = sub {
+      my($this, $o) = @_[0,1];
+      my $name = defined $this->name ? &Tree::DAG_Node::_dump_quote($this->name) : 'undef';
+      push(@out,
+             $o->{'indent'} x ($o->{'_depth'} + 1),
+             "$name$line_end",
+             $o->{'indent'} x $o->{'_depth'},
+             "], $line_end",
+      );
+      return 1;
+    }
+  ;
+  $it->walk_down($o);
+  return join('', @out);
+}
+
+# -----------------------------------------------
+
+sub tree2string
+{
+	my($self, $options, $tree) = @_;
+	$options ||= {};
+	$tree    ||= $self;
+
+	my(@out);
+	my(@vert_dashes);
+
+	$tree -> walk_down
+	({
+		callback =>
+		sub
+		{
+			my($node) = @_;
+
+			push @out, $self -> node2string($options, $node, \@vert_dashes);
+
+			return 1,
+		},
+		_depth => 0,
+	});
+
+	return [@out];
+
+} # End of tree2string.
+
+# -----------------------------------------------
+
+sub unlink_from_mother {
+  my $node = $_[0];
+  my $mother = $node->{'mother'};
+  $mother->remove_daughters($node) if defined($mother) && ref($mother);
+  return $mother;
+}
+
+# -----------------------------------------------
+
+sub _update_daughter_links {
+  # Eliminate any duplicates in my daughters list, and update
+  #  all my daughters' links to myself.
+  my $this = shift;
+
+  my $them = $this->{'daughters'};
+
+  # Eliminate duplicate daughters.
+  my %seen = ();
+  @$them = grep { ref($_) && not($seen{$_}++) } @$them;
+   # not that there should ever be duplicate daughters anyhoo.
+
+  foreach my $one (@$them) { # linkage bookkeeping
+    die "daughter <$one> isn't an object!" unless ref $one;
+    $one->{'mother'} = $this;
+  }
+  return;
+}
+
+# -----------------------------------------------
+
+sub walk_down {
+  my($this, $o) = @_[0,1];
+
+  # All the can()s are in case an object changes class while I'm
+  # looking at it.
+
+  die "I need options!" unless ref($o);
+  die "I need a callback or a callbackback" unless
+    ( ref($o->{'callback'}) || ref($o->{'callbackback'}) );
+
+  my $callback = ref($o->{'callback'}) ? $o->{'callback'} : undef;
+  my $callbackback = ref($o->{'callbackback'}) ? $o->{'callbackback'} : undef;
+  my $callback_status = 1;
+
+  print "Callback: $callback   Callbackback: $callbackback\n" if $Debug;
+
+  printf "* Entering %s\n", ($this->name || $this) if $Debug;
+  $callback_status = &{ $callback }( $this, $o ) if $callback;
+
+  if($callback_status) {
+    # Keep recursing unless callback returned false... and if there's
+    # anything to recurse into, of course.
+    my @daughters = UNIVERSAL::can($this, 'is_node') ? @{$this->{'daughters'}} : ();
+    if(@daughters) {
+      $o->{'_depth'} += 1;
+      #print "Depth " , $o->{'_depth'}, "\n";
+      foreach my $one (@daughters) {
+        $one->walk_down($o) if UNIVERSAL::can($one, 'is_node');
+        # and if it can do "is_node", it should provide a walk_down!
+      }
+      $o->{'_depth'} -= 1;
+    }
+  } else {
+    printf "* Recursing below %s pruned\n", ($this->name || $this) if $Debug;
+  }
+
+  # Note that $callback_status doesn't block callbackback from being called
+  if($callbackback){
+    if(UNIVERSAL::can($this, 'is_node')) { # if it's still a node!
+      print "* Calling callbackback\n" if $Debug;
+      scalar( &{ $callbackback }( $this, $o ) );
+      # scalar to give it the same context as callback
+    } else {
+      print "* Can't call callbackback -- $this isn't a node anymore\n"
+        if $Debug;
+    }
+  }
+  if($Debug) {
+    if(UNIVERSAL::can($this, 'is_node')) { # if it's still a node!
+      printf "* Leaving %s\n", ($this->name || $this)
+    } else {
+      print "* Leaving [no longer a node]\n";
+    }
+  }
+  return;
+}
+
+# -----------------------------------------------
 
 1;
