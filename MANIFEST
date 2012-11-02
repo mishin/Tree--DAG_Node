@@ -8,9 +8,7 @@ META.json
 META.yml
 README
 scripts/cut.and.paste.subtrees.pl
-scripts/demo.pl
 t/about.perl.t
-t/cut.and.paste.subtrees.pl
 t/cut.and.paste.subtrees.t
 t/load.t
 t/pod.t
