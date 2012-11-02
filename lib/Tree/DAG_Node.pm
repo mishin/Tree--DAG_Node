@@ -1,12 +1,10 @@
 package Tree::DAG_Node;
 
-require 5;
-
 use strict;
 use warnings;
 
 our $Debug   = 0;
-our $VERSION = '1.06';
+our $VERSION = '1.07';
 
 # -----------------------------------------------
 
@@ -1726,6 +1724,8 @@ way.  Second off, it often requires subtly different syntax (e.g.,
 \@some_others vs @some_others).  It just complicates things for the
 programmer and the user, without making either appreciably happier.
 
+See however the comments under L</new($hashref)> for options supported in the call to new().
+
 (This is not to say that options in general for a constructor are bad
 -- L</random_network($options)>, discussed far below, necessarily takes options.
 But note that those are not options for the default values of
@@ -1789,14 +1789,14 @@ stratification/modularization like this can keep you sane.
 
 =item the constructor $obj->new() or $obj->new($options)
 
-Just another way to get at the L</new()> method. This B<does not copy>
+Just another way to get at the L</new($hashref)> method. This B<does not copy>
 $obj, but merely constructs a new object of the same class as it.
 Saves you the bother of going $class = ref $obj; $obj2 = $class->new;
 
 =item the method $node->_init($options)
 
 Initialize the object's attribute values.  See the discussion above.
-Presumably this should be called only by the guts of the L</new()>
+Presumably this should be called only by the guts of the L</new($hashref)>
 constructor -- never by the end user.
 
 Currently there are no documented options for putting in the
@@ -1890,16 +1890,23 @@ the root, and ending with $node).
 For example, if to get from node ROOT to node $node, you pass thru
 ROOT, A, B, and $node, then the address is determined as:
 
-* ROOT's my_daughter_index is 0.
+=over 4
 
-* A's my_daughter_index is, suppose, 2. (A is index 2 in ROOT's
-daughter list.)
+=item o ROOT's my_daughter_index is 0
 
-* B's my_daughter_index is, suppose, 0. (B is index 0 in A's
-daughter list.)
+=item o A's my_daughter_index is, suppose, 2
 
-* $node's my_daughter_index is, suppose, 4. ($node is index 4 in
-B's daughter list.)
+A is index 2 in ROOT's daughter list.
+
+=item o B's my_daughter_index is, suppose, 0
+
+B is index 0 in A's daughter list.
+
+=item o $node's my_daughter_index is, suppose, 4
+
+$node is index 4 in B's daughter list.
+
+=back
 
 The address of the above-described $node is, therefore, "0:2:0:4".
 
@@ -2169,28 +2176,41 @@ anyone can suggest a better drawing algorithm, I'd be appreciative.
 
 See also L</tree2string([$options], [$some_tree])>.
 
-=head2 dump_names($options$)
+=head2 dump_names($options)
 
 Returns an array.
 
 Dumps, as an indented list, the names of the nodes starting at $node,
 and continuing under it.  Options are:
 
-* _depth -- A nonnegative number.  Indicating the depth to consider
-$node as being at (and so the generation under that is that plus one,
-etc.).  Defaults to 0.  You may choose to use set _depth =>
-scalar($node->ancestors).
+=over 4
 
-* tick -- a string to preface each entry with, between the
-indenting-spacing and the node's name.  Defaults to empty-string.  You
+=item o _depth -- A nonnegative number
+
+Indicating the depth to consider $node as being at (and so the generation under that is that plus one,
+etc.).  You may choose to use set _depth => scalar($node->ancestors).
+
+Default: 0.
+
+=item o tick -- a string to preface each entry with
+
+This string goes between the indenting-spacing and the node's name.  You
 may prefer "*" or "-> " or someting.
 
-* indent -- the string used to indent with.  Defaults to "  " (two
-spaces).  Another sane value might be ". " (period, space).  Setting it
-to empty-string suppresses indenting.
+Default: ''.
 
-The dump is not printed, but is returned as a list, where each
+=item o indent -- the string used to indent with
+
+Another sane value might be '. ' (period, space).  Setting it to empty-string suppresses indenting.
+
+Default: ' ' x 2.
+
+=back
+
+The output is not printed, but is returned as a list, where each
 item is a line, with a "\n" at the end.
+
+Note: Names are converted to a printable form using the undocumented function _dump_quote().
 
 =head2 format_node([$options], [$node])
 
@@ -2385,9 +2405,23 @@ As a special case, returns 0 if $node has no mother.
 In the first form, returns the value of the node object's "name"
 attribute.  In the second form, sets it to the value of SCALAR.
 
-=head2 new()
+=head2 new($hashref)
 
-See L</MAIN CONSTRUCTOR, AND INITIALIZER>.
+These options are supported in $hashref:
+
+=over 4
+
+=item o attributes => A hashref of attributes
+
+=item o daughters => An arrayref of nodes
+
+=item o mother => A node
+
+=item o name => A string
+
+=back
+
+See also L</MAIN CONSTRUCTOR, AND INITIALIZER> for a long discussion on object creation.
 
 =head2 new_daughter()
 
@@ -2462,18 +2496,30 @@ of "I rewrote L</random_network($options)>, here's the code...")
 
 It takes four options:
 
-* max_node_count -- maximum number of nodes this tree will be allowed
-to have (counting the root).  Defaults to 25.
+=over 4
 
-* min_depth -- minimum depth for the tree.  Defaults to 2.  Leaves can
-be generated only after this depth is reached, so the tree will be at
+=item o max_node_count -- maximum number of nodes this tree will be allowed to have (counting the root)
+
+Default: 25.
+
+=item o min_depth -- minimum depth for the tree
+
+Leaves can be generated only after this depth is reached, so the tree will be at
 least this deep -- unless max_node_count is hit first.
 
-* max_depth -- maximum depth for the tree.  Defaults to 3 plus
-min_depth.  The tree will not be deeper than this.
+Default: 2.
 
-* max_children -- maximum number of children any mother in the tree
-can have.  Defaults to 4.
+=item o max_depth -- maximum depth for the tree
+
+The tree will not be deeper than this.
+
+Default: 3 plus min_depth.
+
+=item o max_children -- maximum number of children any mother in the tree can have.
+
+Default: 4.
+
+=back
 
 =head2 remove_daughter(LIST)
 
@@ -2672,6 +2718,8 @@ Doing this:
 prints the same content, just spread over many lines, and prettily
 indented.
 
+Note: Names are converted to a printable form using the undocumented function _dump_quote().
+
 =head2 tree_to_simple_lol()
 
 Returns that tree (starting at $node) represented as a simple-LoL --
@@ -2688,6 +2736,8 @@ Compare to tree_to_simple_lol_notation.
 
 A simple-LoL version of tree_to_lol_notation (which see); takes the
 same options.
+
+Note: Names are converted to a printable form using the undocumented function _dump_quote().
 
 =head2 tree2string([$options], [$some_tree])
 
@@ -2795,25 +2845,37 @@ which you must provide.  There are three options, "callback" and
 reference), and "_depth".  This is what I<walk_down()> does, in
 pseudocode form:
 
-* Start at the $node given.
+=over 4
 
-* If there's a I<callback>, call it with $node as the first argument,
+=item o Starting pount
+
+Start at the $node given.
+
+=item o Callback
+
+If there's a I<callback>, call it with $node as the first argument,
 and the options hashref as the second argument (which contains the
 potentially useful I<_depth>, remember).  This function must return
 true or false -- if false, it will block the next step:
 
-* If $node has any daughter nodes, increment I<_depth>, and call
+=item o Daughters
+
+If $node has any daughter nodes, increment I<_depth>, and call
 $daughter->walk_down(options_hashref) for each daughter (in order, of
 course), where options_hashref is the same hashref it was called with.
 When this returns, decrements I<_depth>.
 
-* If there's a I<callbackback>, call just it as with I<callback> (but
+=item Callbackback
+
+If there's a I<callbackback>, call just it as with I<callback> (but
 tossing out the return value).  Note that I<callback> returning false
 blocks traversal below $node, but doesn't block calling callbackback
 for $node.  (Incidentally, in the unlikely case that $node has stopped
 being a node object, I<callbackback> won't get called.)
 
-* Return.
+=item o Return
+
+=back
 
 $node->walk_down is the way to recursively do things to a tree (if you
 start at the root) or part of a tree; if what you're doing is best done
@@ -2993,6 +3055,16 @@ Because I want to list the methods in alphabetical order.
 =head2 Why did you move the POD to the end?
 
 Because the apostrophes in the text confused the syntax hightlighter in my editor UltraEdit.
+
+=head1 TODO
+
+=over 4
+
+=item o Copy node does not respect the no_attribute_copy option
+
+This is a bug.
+
+=back
 
 =head1 SEE ALSO
 
