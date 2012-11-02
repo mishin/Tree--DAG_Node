@@ -3047,11 +3047,11 @@ an arrayref to a stack, for example:
 
 =item o The node's name
 
-In Tree you use $node -> value and in C<Tree::DAG_Node> it's $node -> name.
+In C<Tree> you use $node -> value and in C<Tree::DAG_Node> it's $node -> name.
 
 =item o The node's attributes
 
-In Tree you use $node -> meta and in C<Tree::DAG_Node> it's $node -> attributes.
+In <Tree> you use $node -> meta and in C<Tree::DAG_Node> it's $node -> attributes.
 
 =back
 
