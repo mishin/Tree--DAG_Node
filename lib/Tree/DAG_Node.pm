@@ -2836,14 +2836,15 @@ mother, this is a no-operation.
 
 Returns the mother unlinked from (if any).
 
-=head2 walk_down({callback => \&foo, callbackback => \&foo, ...})
+=head2 walk_down($options)
 
 Performs a depth-first traversal of the structure at and under $node.
 What it does at each node depends on the value of the options hashref,
 which you must provide.  There are three options, "callback" and
 "callbackback" (at least one of which must be defined, as a sub
-reference), and "_depth".  This is what I<walk_down()> does, in
-pseudocode form:
+reference), and "_depth".
+
+This is what I<walk_down()> does, in pseudocode form:
 
 =over 4
 
@@ -2861,7 +2862,7 @@ true or false -- if false, it will block the next step:
 =item o Daughters
 
 If $node has any daughter nodes, increment I<_depth>, and call
-$daughter->walk_down(options_hashref) for each daughter (in order, of
+$daughter->walk_down($options) for each daughter (in order, of
 course), where options_hashref is the same hashref it was called with.
 When this returns, decrements I<_depth>.
 
@@ -2877,11 +2878,11 @@ being a node object, I<callbackback> won't get called.)
 
 =back
 
-$node->walk_down is the way to recursively do things to a tree (if you
+$node->walk_down($options) is the way to recursively do things to a tree (if you
 start at the root) or part of a tree; if what you're doing is best done
 via pre-pre order traversal, use I<callback>; if what you're doing is
 best done with post-order traversal, use I<callbackback>.
-I<walk_down> is even the basis for plenty of the methods in this
+I<walk_down()> is even the basis for plenty of the methods in this
 class.  See the source code for examples both simple and horrific.
 
 Note that if you don't specify I<_depth>, it effectively defaults to
@@ -3012,7 +3013,29 @@ method, as it's used in I</lol_to_tree($lol)> and L</random_network($options)>.)
 
 =head2 How to process every node in tree?
 
-See L</walk_down({callback => \&foo, callbackback => \&foo, ...})>.
+See L</walk_down($options)>. $options normally looks like, assuming we wish to pass in
+an arrayref to a stack, for example:
+
+	my(@stack);
+
+	$tree -> walk_down
+	({
+		callback =>
+		sub
+		{
+			my(@node, $options) = @_;
+
+			# Process $node, using $options...
+
+			push @{$$options{stack} }, $node -> name;
+
+			return 1; # Keep walking.
+		},
+		_depth => 0,
+		stack  => \@stack,
+	});
+
+	# Process @stack...
 
 =head2 How do I switch from Tree to Tree::DAG_Node?
 
