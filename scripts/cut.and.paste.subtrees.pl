@@ -33,10 +33,9 @@ sub grow_tree
 	{
 		$count++;
 
-		$node  = Tree::DAG_Node -> new({name => $name, attributes => {'#' => $count} });
-		$child = Tree::DAG_Node -> new({name => $child{$name}, attributes => {'#' => $count} });
-
-		$starting_node = $node if ($name eq 'I');
+		$node          = Tree::DAG_Node -> new({name => $name, attributes => {'#' => $count} });
+		$child         = Tree::DAG_Node -> new({name => $child{$name}, attributes => {'#' => $count} });
+		$starting_node = $node if ($name eq 'H');
 
 		$child -> name('K') if ($count == 3);
 
@@ -168,3 +167,4 @@ print map{"$_\n"} @{$tree -> tree2string({no_attributes => 1})};
 print '-' x 35, "\n";
 print map{"$_\n"} @{$tree -> tree2string({}, $starting_node)};
 print '-' x 35, "\n";
+print "Warning: Don't try this at home kids. Some trees get into an infinite loop.\n";
