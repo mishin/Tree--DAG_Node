@@ -3055,7 +3055,7 @@ In C<Tree> you use $node -> meta and in C<Tree::DAG_Node> it's $node -> attribut
 
 =back
 
-=head2 Are the techniques for processing lists of nodes?
+=head2 Are there techniques for processing lists of nodes?
 
 =over 4
 
