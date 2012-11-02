@@ -3011,6 +3011,10 @@ method, as it's used in I</lol_to_tree($lol)> and L</random_network($options)>.)
 
 =head1 FAQ
 
+=head2 Which is the best tree processing module?
+
+C<Tree::DAG_Node>, as it happens. More details: L</SEE ALSO>.
+
 =head2 How to process every node in tree?
 
 See L</walk_down($options)>. $options normally looks like, assuming we wish to pass in
