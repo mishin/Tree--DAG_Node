@@ -150,21 +150,35 @@ sub process_tree
 
 my($tree) = grow_tree;
 
-print map{"$_\n"} @{$tree -> draw_ascii_tree};
-print '-' x 35, "\n";
-print map{"$_\n"} @{$tree -> tree2string};
-print '-' x 35, "\n";
-print map{"$_\n"} @{$tree -> tree2string({no_attributes => 1})};
-print '-' x 35, "\n";
+my(@ascii_1)  = @{$tree -> draw_ascii_tree};
+my(@string_1) = @{$tree -> tree2string};
+my(@string_2) = @{$tree -> tree2string({no_attributes => 1})};
+my(@string_3) = @{$tree -> tree2string({}, $starting_node)};
 
 process_tree($tree);
 
+print "1: draw_ascii_tree: Before: \n";
+print map{"$_\n"} @ascii_1;
+print "2: draw_ascii_tree: After: \n";
 print map{"$_\n"} @{$tree -> draw_ascii_tree};
 print '-' x 35, "\n";
+
+print "3: tree2string: Before: \n";
+print map{"$_\n"} @string_1;
+print "4: tree2string: After: \n";
 print map{"$_\n"} @{$tree -> tree2string};
 print '-' x 35, "\n";
+
+print "5: tree2string without attributes: Before: \n";
+print map{"$_\n"} @string_2;
+print "6: tree2string without attributes: After: \n";
 print map{"$_\n"} @{$tree -> tree2string({no_attributes => 1})};
 print '-' x 35, "\n";
+
+print "5: tree2string({}, \$subtree) before: \n";
+print map{"$_\n"} @string_3;
+print "6: tree2string({}, \$subtree) after: \n";
 print map{"$_\n"} @{$tree -> tree2string({}, $starting_node)};
 print '-' x 35, "\n";
+
 print "Warning: Don't try this at home kids. Some trees get into an infinite loop.\n";
