@@ -3,7 +3,7 @@ use Module::Build;
 Module::Build -> new
 (
 	module_name    => 'Tree::DAG_Node',
-	license        => 'perl_5',
+	license        => 'artistic_2',
 	dist_abstract  => 'An N-ary tree',
 	dist_author    => 'Sean M. Burke <sburke@cpan.org>',
 	build_requires =>
