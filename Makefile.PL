@@ -26,7 +26,7 @@ WriteMakefile
 	PREREQ_PM =>
 	{
 		strict       => 0,
-		Test::Simple => 0.98,
+		Test::More => 0.98,
 		Test::Pod    => 1.45,
 		warnings     => 0,
 	},
