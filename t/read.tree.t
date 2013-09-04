@@ -1,5 +1,7 @@
 use strict;
 use warnings;
+use warnings  qw(FATAL utf8);    # Fatalize encoding glitches.
+use open      qw(:std :utf8);    # Undeclared streams in UTF-8.
 
 use File::Temp;
 
@@ -40,7 +42,7 @@ my($node) = Tree::DAG_Node -> new;
 
 isa_ok($node, 'Tree::DAG_Node', 'new() returned correct object type');
 
-for (qw/with without/)
+for (qw/utf8 with without/)
 {
 	process($node, $_);
 }

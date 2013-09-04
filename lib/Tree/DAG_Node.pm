@@ -1690,6 +1690,11 @@ Using as a class of its own:
 	$new_daughter->name("More");
 	...
 
+Using with utf8 data:
+
+	read_tree($file_name) works with utf8 data. See t/read.tree.t and t/tree.utf8.attributes.txt.
+	Such a file can be created by redirecting the output of tree2string() to a file of type utf8.
+
 =head1 DESCRIPTION
 
 This class encapsulates/makes/manipulates objects that represent nodes
@@ -1883,7 +1888,7 @@ way.  Second off, it often requires subtly different syntax (e.g.,
 \@some_others vs @some_others).  It just complicates things for the
 programmer and the user, without making either appreciably happier.
 
-See however the comments under L</new($hashref)> for options supported in the call to new().
+See however the comments under L</new($hashref)> for options newly supported in the call to new().
 
 (This is not to say that options in general for a constructor are bad
 -- L</random_network($options)>, discussed far below, necessarily takes options.
@@ -2716,15 +2721,15 @@ See t/tree.without.attributes.txt and t/tree.with.attributes.txt for sample data
 Returns the root of the tree read from $file_name.
 
 The file must have been written by re-directing the output of L</tree2string([$options], [$some_tree])> to a file,
-since it makes assumptions about the format of the stingified attributes.
+since it makes assumptions about the format of the stringified attributes.
+
+read_tree() works with utf8 data. See t/read.tree.t and t/tree.utf8.attributes.txt.
 
 Note: To call this method you need a caller. It'll be a tree of 1 node. The reason is that inside this method it
 calls various other methods, and for these calls it needs $self. That way, those methods can be called from
 anywhere, and not just from within read_tree().
 
-Note: read_tree() works with utf8 data.
-
-See t/read.tree.t.
+read_tree() works with utf8 data. See t/read.tree.t and t/tree.utf8.attributes.txt.
 
 For reading and writing trees to databases, see L<Tree::DAG_Node::Persist>.
 
@@ -2887,11 +2892,11 @@ Returns a list of all nodes (going left-to-right) that have the same
 mother as $node -- B<not including> $node itself.  If $node is root,
 this returns empty-list.
 
-=head1 string2hashref($s)
+=head2 string2hashref($s)
 
 Returns a hashref built from the string.
 
-The string is expected to be something like '{AutoCommit => 1, PrintError => 0}'.
+The string is expected to be something like '{AutoCommit => '1', PrintError => "0", ReportError => 1}'.
 
 The empty string is returned as {}.
 
@@ -3232,12 +3237,12 @@ C<Tree::DAG_Node>, as it happens. More details: L</SEE ALSO>.
 
 =head2 Why does read_tree() use Perl6::Slurp and not File::Slurp?
 
-Because L<Perl6::Slurp> supports utf8.
+Because L<Perl6::Slurp> supports utf8. See t/read.tree.t and t/tree.utf8.attributes.txt.
 
 =head2 How to process every node in tree?
 
-See L</walk_down($options)>. $options normally looks like, assuming we wish to pass in
-an arrayref to a stack, for example:
+See L</walk_down($options)>. $options normally looks like this, assuming we wish to pass in
+an arrayref as a stack:
 
 	my(@stack);
 
@@ -3359,7 +3364,7 @@ Programs>.)
 
 =head1 MACHINE-READABLE CHANGE LOG
 
-The file CHANGES was converted into Changelog.ini by L<Module::Metadata::Changes>.
+The file Changes was converted into Changelog.ini by L<Module::Metadata::Changes>.
 
 =head1 SUPPORT
 
@@ -3369,7 +3374,8 @@ L<https://rt.cpan.org/Public/Dist/Display.html?Name=Tree::DAG_Node>.
 
 =head1 ACKNOWLEDGEMENTS
 
-The code to print the tree, in tree2string(), was adapted from L<Forest::Tree::Writer::ASCIIWithBranches>.
+The code to print the tree, in tree2string(), was adapted from L<Forest::Tree::Writer::ASCIIWithBranches>
+by the dread Stevan Little.
 
 =head1 MAINTAINER
 
