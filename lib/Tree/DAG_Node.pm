@@ -2681,6 +2681,12 @@ Returns the root of the tree read from $file_name.
 
 The file must have been written by re-directing the output of L</tree2string([$options], [$some_tree])> to a file.
 
+Note: To call this method you need a caller. It'll be a tree of 1 node. The reason is that inside this method it
+calls various other methods, and for these calls it needs $self. That way, those methods can be called from
+anywhere, and not just from within read_tree().
+
+See t/read.tree.t.
+
 For reading and writing trees to databases, see L<Tree::DAG_Node::Persist>.
 
 =head2 remove_daughter(LIST)

@@ -36,7 +36,7 @@
    "provides" : {
       "Tree::DAG_Node" : {
          "file" : "lib/Tree/DAG_Node.pm",
-         "version" : "1.13"
+         "version" : "1.14"
       }
    },
    "release_status" : "stable",
@@ -45,5 +45,5 @@
          "http://www.perlfoundation.org/artistic_license_2_0"
       ]
    },
-   "version" : "1.13"
+   "version" : "1.14"
 }
