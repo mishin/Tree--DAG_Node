@@ -2722,6 +2722,8 @@ Note: To call this method you need a caller. It'll be a tree of 1 node. The reas
 calls various other methods, and for these calls it needs $self. That way, those methods can be called from
 anywhere, and not just from within read_tree().
 
+Note: read_tree() works with utf8 data.
+
 See t/read.tree.t.
 
 For reading and writing trees to databases, see L<Tree::DAG_Node::Persist>.
