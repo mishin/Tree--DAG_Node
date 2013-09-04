@@ -16,7 +16,7 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "0"
+            "Test::More" : "0.98"
          }
       },
       "configure" : {
@@ -26,7 +26,7 @@
       },
       "runtime" : {
          "requires" : {
-            "Test::More" : "0.98",
+            "Perl6::Slurp" : "0.051003",
             "perl" : "v5.8.1",
             "strict" : "0",
             "warnings" : "0"

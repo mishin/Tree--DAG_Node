@@ -1,9 +1,11 @@
 Revision history for Perl module Tree::DAG_Node.
 
 1.14  Wed Sep  4 13:44:00 2013
-	- Document copy().
-	- Add read_tree(), for text files.
-	- Add See Also to the docs.
+	- Document method copy().
+	- Add method read_tree(), for text files. It uses Perl6::Slurp.
+	- Add method string2hashref($s) for use by read_tree().
+	- Add t/read.tree.t to test read_tree().
+	- Add t/tree.with.attributes.txt and t/tree.without.attributes.txt, in utf8, for use by t/read.tree.t.
 
 1.13  Mon Aug 12 17:16:00 2013
 	- Change the values accepted for the no_attributes option from undef and 1 to 0 and 1.

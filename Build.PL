@@ -20,8 +20,9 @@ Module::Build -> new
 	},
 	requires =>
 	{
-		'perl'     => '5.8.1', # For the utf stuff.
-		'strict'   => 0,
-		'warnings' => 0,
+		'perl'         => '5.8.1', # For the utf8 stuff.
+		'Perl6::Slurp' => 0.051003,
+		'strict'       => 0,
+		'warnings'     => 0,
 	},
 ) -> create_build_script();

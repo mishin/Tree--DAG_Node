@@ -28,11 +28,12 @@ WriteMakefile
 	PL_FILES  => {},
 	PREREQ_PM =>
 	{
-		'perl'       => '5.8.1', # For the utf stuff.
-		'strict'     => 0,
-		'Test::More' => 0.98,
-##		'Test::Pod'  => 1.45, # Make it optional. See t/pod.t. # Make it optional. See t/pod.t
-		'warnings'   => 0,
+		'perl'         => '5.8.1', # For the utf8 stuff.
+		'Perl6::Slurp' => 0.051003,
+		'strict'       => 0,
+		'Test::More'   => 0.98,
+##		'Test::Pod'    => 1.45, # Make it optional. See t/pod.t. # Make it optional. See t/pod.t
+		'warnings'     => 0,
 	},
 	VERSION_FROM => 'lib/Tree/DAG_Node.pm',
 );
