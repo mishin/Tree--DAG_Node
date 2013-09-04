@@ -2,9 +2,11 @@ package Tree::DAG_Node;
 
 use strict;
 use warnings;
+use warnings  qw(FATAL utf8);    # Fatalize encoding glitches.
+use open      qw(:std :utf8);    # Undeclared streams in UTF-8.
 
 our $Debug   = 0;
-our $VERSION = '1.13';
+our $VERSION = '1.14';
 
 # -----------------------------------------------
 
@@ -1226,6 +1228,35 @@ sub sisters {
               @{$node->{'mother'}->{'daughters'}}
              );
 }
+
+# -----------------------------------------------
+
+sub string2hashref
+{
+	my($self, $s) = @_;
+	$s            ||= '';
+	my($result)   = {};
+
+	if ($s)
+	{
+		if ($s =~ m/^\{\s*([^}]*)\}$/)
+		{
+			my(@attr) = map{split(/\s*=>\s*/)} split(/\s*,\s*/, $1);
+
+			if (@attr)
+			{
+				$result = {@attr};
+			}
+		}
+		else
+		{
+			die "Invalid syntax for hashref: $s";
+		}
+	}
+
+	return $result;
+
+} # End of string2hashref.
 
 # -----------------------------------------------
 
@@ -2680,6 +2711,14 @@ single node, which here gets the name 'Lonely'.
 Returns a list of all nodes (going left-to-right) that have the same
 mother as $node -- B<not including> $node itself.  If $node is root,
 this returns empty-list.
+
+=head1 Method: string2hashref($s)
+
+Returns a hashref built from the string, or the empty hashref.
+
+The string is expected to be something like '{AutoCommit => 1, PrintError => 0}'.
+
+The empty string is returned as {}.
 
 =head2 tree_to_lol()
 
