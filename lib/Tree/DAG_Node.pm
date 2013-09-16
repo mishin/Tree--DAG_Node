@@ -2,7 +2,7 @@ package Tree::DAG_Node;
 
 use strict;
 use warnings;
-use warnings  qw(FATAL utf-8); # Fatalize encoding glitches.
+use warnings  qw(FATAL utf8); # Fatalize encoding glitches.
 
 our $Debug   = 0;
 our $VERSION = '1.17';
