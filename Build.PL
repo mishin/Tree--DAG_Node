@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 
+use 5.8.1; # For the utf-8 stuff.
+
 use Module::Build;
 
 Module::Build -> new
@@ -22,7 +24,6 @@ Module::Build -> new
 	{
 		'File::Spec'  => 3.40,
 		'File::Temp'  => 0.2301,
-		'perl'        => '5.008001', # For the utf-8 stuff.
 		'File::Slurp' => 9999.19,
 		'strict'      => 0,
 		'warnings'    => 0,
