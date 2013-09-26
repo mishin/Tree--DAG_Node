@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use 5.8.1; # For the utf-8 stuff.
+use 5.008_001; # For the utf-8 stuff.
 
 use Module::Build;
 
