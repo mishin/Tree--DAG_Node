@@ -4,7 +4,7 @@
       "Sean M. Burke <sburke@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.131560",
+   "generated_by" : "Module::Build version 0.4204",
    "license" : [
       "artistic_2"
    ],
@@ -29,7 +29,6 @@
             "File::Slurp" : "9999.19",
             "File::Spec" : "3.4",
             "File::Temp" : "0.2301",
-            "perl" : "5.008001",
             "strict" : "0",
             "warnings" : "0"
          }
