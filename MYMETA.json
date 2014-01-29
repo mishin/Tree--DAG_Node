@@ -28,7 +28,7 @@
          "requires" : {
             "File::Slurp" : "9999.19",
             "File::Spec" : "3.4",
-            "File::Temp" : "0.2301",
+            "File::Temp" : "0",
             "strict" : "0",
             "warnings" : "0"
          }
