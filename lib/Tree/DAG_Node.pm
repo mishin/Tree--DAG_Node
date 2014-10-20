@@ -989,7 +989,7 @@ sub node2string
 		$$vert_dashes[$depth] = $offset;
 	}
 
-	return join('' => @indent[1 .. $#indent]) . ($depth ? '   |---' : '') . $self -> format_node($options, $t);
+	return join('' => @indent[1 .. $#indent]) . ($depth ? '   |--- ' : ' ') . $self -> format_node($options, $t);
 
 } # End of node2string.
 
