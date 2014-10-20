@@ -15,6 +15,7 @@ Revision history for Perl module Tree::DAG_Node.
 		|   |--- =>
 		|   |--- [values]
 		This was done to make the difference between node names '1' and '-1' much clearer.
+		Apologies to anyone who runs tests which compare the output with pre-existing files.
 
 1.22  Thu Feb 13 13:14:00 2014
 	- t/read.tree.t was still using File::Slurp :-(.
