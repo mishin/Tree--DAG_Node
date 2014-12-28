@@ -973,9 +973,9 @@ sub new_daughter_left {
 
 sub node2string
 {
-	my($self, $options, $t, $vert_dashes) = @_;
-	my($depth)         = scalar($t -> ancestors) || 0;
-	my($sibling_count) = defined $t -> mother ? scalar $t -> self_and_sisters : 1;
+	my($self, $options, $node, $vert_dashes) = @_;
+	my($depth)         = scalar($node -> ancestors) || 0;
+	my($sibling_count) = defined $node -> mother ? scalar $node -> self_and_sisters : 1;
 	my($offset)        = ' ' x 4;
 	my(@indent)        = map{$$vert_dashes[$_] || $offset} 0 .. $depth - 1;
 	@$vert_dashes      =
@@ -984,12 +984,12 @@ sub node2string
 		($sibling_count == 1 ? $offset : '   |'),
 	);
 
-	if ($sibling_count == ($t -> my_daughter_index + 1) )
+	if ($sibling_count == ($node -> my_daughter_index + 1) )
 	{
 		$$vert_dashes[$depth] = $offset;
 	}
 
-	return join('' => @indent[1 .. $#indent]) . ($depth ? '   |--- ' : '') . $self -> format_node($options, $t);
+	return join('' => @indent[1 .. $#indent]) . ($depth ? '   |--- ' : '') . $self -> format_node($options, $node);
 
 } # End of node2string.
 
@@ -1866,9 +1866,7 @@ daughters, 'attributes' setting of a new empty hashref), and returns
 the object created.  (If you just said "CLASS->new()" or "CLASS->new",
 then it pretends you called "CLASS->new({})".)
 
-Currently no options for putting in hashref $options are part
-of the documented interface, but the options is here in case
-you want to add such behavior in a derived class.
+See also the comments under L</new($hashref)> for options supported in the call to new().
 
 Read on if you plan on using Tree::DAG_New as a base class.
 (Otherwise feel free to skip to the description of _init.)
@@ -1888,12 +1886,10 @@ Way 2: Be able to specify some/most/all the object's attributes in
 the call to the constructor.  Something like:
 
     $node = Tree::DAG_Node->new({
-      name => 'Supahnode!',
-      mother => $root,
-      daughters => \@some_others
+      name      => 'Supahnode!',
+      mother    => $root,
+      daughters => \@some_others,
     });
-
-See the comments under L</new($hashref)> for options now supported in the call to new().
 
 (This is not to say that options in general for a constructor are bad
 -- L</random_network($options)>, discussed far below, necessarily takes options.
@@ -2167,7 +2163,7 @@ that'll be undef if $node is root.
 
 =head2 copy($option)
 
-Returns a copy the calling node (the invocant). E.g.: my($copy) = $node -> copy;
+Returns a copy of the calling node (the invocant). E.g.: my($copy) = $node -> copy;
 
 $option is a hashref of options, with these (key => value) pairs:
 
@@ -2397,9 +2393,7 @@ item is a line, with a "\n" at the end.
 
 Note: Names are converted to a printable form using the undocumented function _dump_quote().
 
-=head2 format_node($options, [$node])
-
-Here, [] represent an optional parameter.
+=head2 format_node($options, $node)
 
 Returns a string consisting of the node's name and, optionally, it's attributes.
 
@@ -2417,7 +2411,7 @@ Default: 0 (include attributes).
 
 Calls L</hashref2string($hashref)>.
 
-Called by L</node2string([$options], [$node])>.
+Called by L</node2string($options, $node, $vert_dashes)>.
 
 You would not normally call this method.
 
@@ -2463,7 +2457,7 @@ ancestor of $node, it behaves as if you called just $node->generation().
 
 Returns the given hashref as a string.
 
-Called by L</format_node($options, [$node])>.
+Called by L</format_node($options, $node)>.
 
 =head2 is_daughter_of($node2)
 
@@ -2627,9 +2621,9 @@ daughter list, etc.
 
 As you'd expect for a constructor, it returns the node-object created.
 
-# Note that if you radically change 'mother'/'daughters' bookkeeping,
-# you may have to change this routine, since it's one of the places
-# that directly writes to 'daughters' and 'mother'.
+Note that if you radically change 'mother'/'daughters' bookkeeping,
+you may have to change this routine, since it's one of the places
+that directly writes to 'daughters' and 'mother'.
 
 =head2 new_daughter_left()
 
@@ -2638,11 +2632,11 @@ As you'd expect for a constructor, it returns the node-object created.
 This is just like $mother->new_daughter, but adds the new daughter
 to the left (start) of $mother's daughter list.
 
-# Note that if you radically change 'mother'/'daughters' bookkeeping,
-# you may have to change this routine, since it's one of the places
-# that directly writes to 'daughters' and 'mother'.
+Note that if you radically change 'mother'/'daughters' bookkeeping,
+you may have to change this routine, since it's one of the places
+that directly writes to 'daughters' and 'mother'.
 
-=head2 node2string($options, $t, $vert_dashes)
+=head2 node2string($options, $node, $vert_dashes)
 
 Returns a string of the node's name and attributes, with a leading indent, suitable for printing.
 
@@ -2658,7 +2652,9 @@ Default: 0 (include attributes).
 
 =back
 
-Calls L</format_node($options, [$node])>.
+Ignore the parameter $vert_dashes. The code uses it as temporary storage.
+
+Calls L</format_node($options, $node)>.
 
 Called by L</tree2string($options, [$some_tree])>.
 
@@ -2711,7 +2707,7 @@ Default: 4.
 Parses the string $s and extracts the name and attributes, assuming the format is as generated by
 L</tree2string($options, [$some_tree])>.
 
-This bascially means the string was generated by L</hashref2string($hashref)>.
+This bascially means the attribute string was generated by L</hashref2string($hashref)>.
 
 Attributes may be absent, in which case they default to {}.
 
@@ -2755,7 +2751,7 @@ and replacing it with the items in LIST.  This returns a list consisting
 of $node followed by LIST, i.e., the nodes that replaced it.
 
 LIST can include $node itself (presumably at most once).  LIST can
-also be empty-list.  However, if any items in LIST are sisters to
+also be the empty list.  However, if any items in LIST are sisters to
 $node, they are ignored, and are not in the copy of LIST passed as the
 return value.
 
@@ -2810,9 +2806,9 @@ $node->replace_with_daughters is a more common operation in
 tree-wrangling than $node->replace_with(LIST), so deserves a named
 method of its own, but that's just me.)
 
-# Note that if you radically change 'mother'/'daughters' bookkeeping,
-# you may have to change this routine, since it's one of the places
-# that directly writes to 'daughters' and 'mother'.
+Note that if you radically change 'mother'/'daughters' bookkeeping,
+you may have to change this routine, since it's one of the places
+that directly writes to 'daughters' and 'mother'.
 
 =head2 right_sister()
 
@@ -3048,7 +3044,7 @@ Default: 0 (include attributes).
 
 =back
 
-Calls L</node2string($options, $t, $vert_dashes)>.
+Calls L</node2string($options, $node, $vert_dashes)>.
 
 See also L</draw_ascii_tree([$options])>.
 
@@ -3112,7 +3108,7 @@ Note that if you don't specify I<_depth>, it effectively defaults to
 0.  You should set it to scalar($node->ancestors) if you want
 I<_depth> to reflect the true depth-in-the-tree for the nodes called,
 instead of just the depth below $node.  (If $node is the root, there's
-difference, of course.)
+no difference, of course.)
 
 And B<by the way>, it's a bad idea to modify the tree from the callback.
 Unpredictable things may happen.  I instead suggest having your callback
